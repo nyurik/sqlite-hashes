@@ -3,6 +3,10 @@
 @_default:
     just --list --unsorted
 
+# Run cargo test
+test:
+    ./.cargo-husky/hooks/pre-push
+
 # Run cargo fmt and cargo clippy
 lint: fmt clippy
 

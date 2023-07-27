@@ -1,8 +1,13 @@
 [package]
 name = "sqlite-hashes"
-description = "SQLite Extension adding various hashing functions like MD5, SHA1, SHA256, SHA512, etc."
 version = "0.1.0"
+description = "Hashing functions for SQLite: MD5, SHA1, SHA256, SHA512, etc."
+authors = ["Yuri Astrakhan <YuriAstrakhan@gmail.com>"]
+repository = "https://github.com/nyurik/sqlite-hashes"
 edition = "2021"
+license = "MIT OR Apache-2.0"
+keywords = ["sqlite", "rusqlite", "hash", "md5", "sha256"]
+categories = ["database", "cryptography"]
 rust-version = "1.60.0"
 
 [features]
@@ -14,6 +19,12 @@ sha512 = ["dep:sha2"]
 
 [dependencies]
 rusqlite = { version = "0.29.0", features = ["functions"] }
+
+# Digest and all hashing algorithms are using the same crates internally, so should be kept in sync
+digest = "0.10.7"
 md-5 = { version = "0.10.5", optional = true }
 sha1 = { version = "0.10.5", optional = true }
 sha2 = { version = "0.10.5", optional = true }
+
+[dev-dependencies]
+cargo-husky = { version = "1", features = ["user-hooks"], default-features = false }
