@@ -8,7 +8,7 @@
 
 Use this crate to add various hash functions to SQLite, including MD5, SHA1, SHA256, and SHA512.
 
-This crate uses [rusqlite](https://crates.io/crates/rusqlite) to add user-defined scalar functions using static linking. Eventually this crate may also support dynamic extension loading (PRs welcome).
+This crate uses [rusqlite](https://crates.io/crates/rusqlite) to add user-defined scalar functions using static linking. Eventually it would be good to build dynamically loadable extension binaries usable from other languages (PRs welcome).
 
 ## Usage
 
