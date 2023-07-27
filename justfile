@@ -17,3 +17,7 @@ fmt:
 # Run cargo clippy
 clippy:
     cargo clippy --workspace --all-targets --bins --tests --lib --benches -- -D warnings
+
+# Build and open code documentation
+docs:
+    cargo doc --no-deps --open

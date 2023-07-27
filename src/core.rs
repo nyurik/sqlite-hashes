@@ -43,7 +43,7 @@ pub mod test {
     pub fn hex(db: &Connection, expr: &str, expected: &str) {
         let sql = format!("SELECT {expr}");
         let res: Vec<_> = db.query_row_and_then(&sql, [], |r| r.get(0)).unwrap();
-        let res_str = res.iter().map(|b| format!("{:02x}", b)).collect::<String>();
+        let res_str = res.iter().map(|b| format!("{b:02x}")).collect::<String>();
         assert_eq!(res_str, expected, "asserting hash for {expr}");
     }
 

@@ -1,6 +1,6 @@
 [package]
 name = "sqlite-hashes"
-version = "0.1.0"
+version = "0.1.1"
 description = "Hashing functions for SQLite: MD5, SHA1, SHA256, SHA512, etc."
 authors = ["Yuri Astrakhan <YuriAstrakhan@gmail.com>"]
 repository = "https://github.com/nyurik/sqlite-hashes"

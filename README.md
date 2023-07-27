@@ -8,7 +8,7 @@
 
 Use this crate to add various hash functions to SQLite, including MD5, SHA1, SHA256, and SHA512.
 
-This crate uses [rusqlite](https://crates.io/crates/rusqlite) to add user-defined scalar functions and statically linking everything. Eventually it may also support dynamic extension loading (PRs welcome).
+This crate uses [rusqlite](https://crates.io/crates/rusqlite) to add user-defined scalar functions using static linking. Eventually this crate may also support dynamic extension loading (PRs welcome).
 
 ## Usage
 
@@ -32,6 +32,10 @@ By default, this crate will compile with all hash functions. You can enable just
 [dependencies]
 sqlite-hashes = { version = "0.1", default-features = false, features = ["sha256"] }
 ``` 
+
+## Development
+* This project is easier to develop with [just](https://github.com/casey/just#readme), a modern alternative to `make`. Install it with `cargo install just`.
+* On `git push`, it will run a few validations, including `cargo fmt`, `cargo clippy`, and `cargo test`.  Use `git push --no-verify` to skip these checks.
 
 ## License
 
