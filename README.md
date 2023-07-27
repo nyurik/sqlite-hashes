@@ -1,6 +1,6 @@
 # sqlite-hashes
 
-[![GitHub](https://img.shields.io/badge/github-nyurik/sqlite-hashes-8da0cb?logo=github)](https://github.com/nyurik/sqlite-hashes)
+[![GitHub](https://img.shields.io/badge/github-nyurik/sqlite--hashes-8da0cb?logo=github)](https://github.com/nyurik/sqlite-hashes)
 [![crates.io version](https://img.shields.io/crates/v/sqlite-hashes.svg)](https://crates.io/crates/sqlite-hashes)
 [![docs.rs docs](https://docs.rs/sqlite-hashes/badge.svg)](https://docs.rs/sqlite-hashes)
 [![CI build](https://github.com/nyurik/sqlite-hashes/workflows/CI/badge.svg)](https://github.com/nyurik/sqlite-hashes/actions)
