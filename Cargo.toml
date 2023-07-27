@@ -1,0 +1,19 @@
+[package]
+name = "sqlite-hashes"
+description = "SQLite Extension adding various hashing functions like MD5, SHA1, SHA256, SHA512, etc."
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.60.0"
+
+[features]
+default = ["md5", "sha1", "sha256", "sha512"]
+md5 = ["dep:md-5"]
+sha1 = ["dep:sha1"]
+sha256 = ["dep:sha2"]
+sha512 = ["dep:sha2"]
+
+[dependencies]
+rusqlite = { version = "0.29.0", features = ["functions"] }
+md-5 = { version = "0.10.5", optional = true }
+sha1 = { version = "0.10.5", optional = true }
+sha2 = { version = "0.10.5", optional = true }
