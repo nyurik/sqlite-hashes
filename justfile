@@ -3,7 +3,7 @@
 @_default:
     just --list --unsorted
 
-# Run cargo test
+# Run all tests
 test:
     ./.cargo-husky/hooks/pre-push
 
