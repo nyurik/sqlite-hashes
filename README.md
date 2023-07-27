@@ -25,6 +25,14 @@ fn main() {
 }
 ```
 
+## Features
+By default, this crate will compile with all hash functions. You can enable just the ones you need to reduce compile time.
+
+```toml
+[dependencies]
+sqlite-hashes = { version = "0.1", default-features = false, features = ["sha256"] }
+``` 
+
 ## License
 
 Licensed under either of
