@@ -3,6 +3,7 @@
 [![GitHub](https://img.shields.io/badge/github-nyurik/sqlite--hashes-8da0cb?logo=github)](https://github.com/nyurik/sqlite-hashes)
 [![crates.io version](https://img.shields.io/crates/v/sqlite-hashes.svg)](https://crates.io/crates/sqlite-hashes)
 [![docs.rs docs](https://docs.rs/sqlite-hashes/badge.svg)](https://docs.rs/sqlite-hashes)
+[![crates.io version](https://img.shields.io/crates/l/sqlite-hashes.svg)](https://github.com/nyurik/sqlite-hashes/blob/main/LICENSE-APACHE)
 [![CI build](https://github.com/nyurik/sqlite-hashes/workflows/CI/badge.svg)](https://github.com/nyurik/sqlite-hashes/actions)
 
 
@@ -36,6 +37,7 @@ sqlite-hashes = { version = "0.1", default-features = false, features = ["sha256
 ## Development
 * This project is easier to develop with [just](https://github.com/casey/just#readme), a modern alternative to `make`. Install it with `cargo install just`.
 * On `git push`, it will run a few validations, including `cargo fmt`, `cargo clippy`, and `cargo test`.  Use `git push --no-verify` to skip these checks.
+* To run tests, use `just test`.
 
 ## License
 
