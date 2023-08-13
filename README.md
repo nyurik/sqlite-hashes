@@ -36,8 +36,9 @@ sqlite-hashes = { version = "0.1", default-features = false, features = ["sha256
 
 ## Development
 * This project is easier to develop with [just](https://github.com/casey/just#readme), a modern alternative to `make`. Install it with `cargo install just`.
-* On `git push`, it will run a few validations, including `cargo fmt`, `cargo clippy`, and `cargo test`.  Use `git push --no-verify` to skip these checks.
+* To get a list of available commands, run `just`.
 * To run tests, use `just test`.
+* On `git push`, it will run a few validations, including `cargo fmt`, `cargo clippy`, and `cargo test`.  Use `git push --no-verify` to skip these checks.
 
 ## License
 

@@ -21,3 +21,8 @@ clippy:
 # Build and open code documentation
 docs:
     cargo doc --no-deps --open
+
+# Clean all build artifacts
+clean:
+    cargo clean
+    rm -f Cargo.lock
