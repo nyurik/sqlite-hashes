@@ -7,7 +7,7 @@
 [![CI build](https://github.com/nyurik/sqlite-hashes/workflows/CI/badge.svg)](https://github.com/nyurik/sqlite-hashes/actions)
 
 
-Use this crate to add various hash functions to SQLite, including MD5, SHA1, SHA256, and SHA512.
+Use this crate to add various hash functions to SQLite, including MD5, SHA1, SHA256, and SHA512. All functions support text and blob values. There is also an aggregate functions that can be used on a set of values.
 
 This crate uses [rusqlite](https://crates.io/crates/rusqlite) to add user-defined scalar functions using static linking. Eventually it would be good to build dynamically loadable extension binaries usable from other languages (PRs welcome).
 
@@ -23,6 +23,23 @@ fn main() {
   let sql = "SELECT hex(sha256('password'))";
   let hash: String = db.query_row_and_then(&sql, [], |r| r.get(0)).unwrap();
   assert_eq!(hash, "5E884898DA28047151D0E56F8DC6292773603D0D6AABBDD62A11EF721D1542D8");
+
+  // Iterate over a set of values and hash them.
+  // Make sure the value order is consistent.
+  // This example creates a sequence of ints from 1 to 9.
+    let sql = "WITH RECURSIVE seq(value) AS (
+    SELECT 1 UNION ALL SELECT value + 1 FROM seq LIMIT 9
+  )
+  SELECT hex(sha256_concat(cast(value as text)))
+  FROM seq
+  ORDER BY value";
+  let hash: String = db.query_row_and_then(&sql, [], |r| r.get(0)).unwrap();
+  assert_eq!(hash, "15E2B0D3C33891EBB0F1EF609EC419420C20E320CE94C65FBC8C3312448EB225");
+  
+  // The above is equivalent to a single value:
+  let sql = "SELECT hex(sha256('123456789'))";
+  let hash: String = db.query_row_and_then(&sql, [], |r| r.get(0)).unwrap();
+  assert_eq!(hash, "15E2B0D3C33891EBB0F1EF609EC419420C20E320CE94C65FBC8C3312448EB225");
 }
 ```
 

@@ -1,5 +1,15 @@
 #![cfg_attr(feature = "default", doc = include_str!("../README.md"))]
 
+#[cfg(not(any(
+    feature = "md5",
+    feature = "sha1",
+    feature = "sha256",
+    feature = "sha512"
+)))]
+compile_error!(
+    "At least one of the features `md5`, `sha1`, `sha256`, or `sha512` must be enabled."
+);
+
 /// Re-export of the [`rusqlite`](https://crates.io/crates/rusqlite) crate to avoid version conflicts.
 pub use rusqlite;
 

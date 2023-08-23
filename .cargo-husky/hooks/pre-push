@@ -16,6 +16,10 @@ cargo --version
 cargo fmt --all -- --check
 cargo clippy -- -D warnings
 cargo build
-cargo test --workspace --all-targets --bins --tests --lib --benches
+cargo test --workspace --all-targets --all-features --bins --tests --lib --benches
+cargo test --no-default-features --features md5
+cargo test --no-default-features --features sha1
+cargo test --no-default-features --features sha256
+cargo test --no-default-features --features sha512
 cargo test --doc
 RUSTDOCFLAGS="-D warnings" cargo doc --no-deps
