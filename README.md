@@ -7,9 +7,9 @@
 [![CI build](https://github.com/nyurik/sqlite-hashes/workflows/CI/badge.svg)](https://github.com/nyurik/sqlite-hashes/actions)
 
 
-Use this crate to add various hash functions to SQLite, including MD5, SHA1, SHA256, and SHA512. All functions support text and blob values. There is also an aggregate functions that can be used on a set of values.
+Use this crate to add various hash functions to SQLite, including MD5, SHA1, SHA256, and SHA512. All functions support text and blob values. There are also aggregate functions that compute combined hash over a set of values.
 
-This crate uses [rusqlite](https://crates.io/crates/rusqlite) to add user-defined scalar functions using static linking. Eventually it would be good to build dynamically loadable extension binaries usable from other languages (PRs welcome).
+This crate uses [rusqlite](https://crates.io/crates/rusqlite) to add user-defined functions using static linking. Eventually it would be good to build dynamically loadable extension binaries usable from other languages (PRs welcome).
 
 ## Usage
 
