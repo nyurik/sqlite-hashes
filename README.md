@@ -17,17 +17,20 @@ This crate uses [rusqlite](https://crates.io/crates/rusqlite) to add user-define
 use sqlite_hashes::{register_sha256_function, rusqlite::Connection};
 
 fn main() {
+  // Connect to SQLite DB and register needed hashing functions
   let db = Connection::open_in_memory().unwrap();
   register_sha256_function(&db).unwrap();
 
+  // Hash 'password' using SHA-256, and dump it as a HEX string
   let sql = "SELECT hex(sha256('password'))";
   let hash: String = db.query_row_and_then(&sql, [], |r| r.get(0)).unwrap();
   assert_eq!(hash, "5E884898DA28047151D0E56F8DC6292773603D0D6AABBDD62A11EF721D1542D8");
 
-  // Iterate over a set of values and hash them.
+  // Iterate over a set of values and hash them together.
   // Make sure the value order is consistent.
   // This example creates a sequence of ints from 1 to 9.
-    let sql = "WITH RECURSIVE seq(value) AS (
+    let sql = "
+  WITH RECURSIVE seq(value) AS (
     SELECT 1 UNION ALL SELECT value + 1 FROM seq LIMIT 9
   )
   SELECT hex(sha256_concat(cast(value as text)))
@@ -36,7 +39,7 @@ fn main() {
   let hash: String = db.query_row_and_then(&sql, [], |r| r.get(0)).unwrap();
   assert_eq!(hash, "15E2B0D3C33891EBB0F1EF609EC419420C20E320CE94C65FBC8C3312448EB225");
   
-  // The above is equivalent to a single value:
+  // The above sequence aggregation example is equivalent to this:
   let sql = "SELECT hex(sha256('123456789'))";
   let hash: String = db.query_row_and_then(&sql, [], |r| r.get(0)).unwrap();
   assert_eq!(hash, "15E2B0D3C33891EBB0F1EF609EC419420C20E320CE94C65FBC8C3312448EB225");
