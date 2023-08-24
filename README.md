@@ -51,7 +51,7 @@ By default, this crate will compile with all hash functions. You can enable just
 
 ```toml
 [dependencies]
-sqlite-hashes = { version = "0.1", default-features = false, features = ["sha256"] }
+sqlite-hashes = { version = "0.2", default-features = false, features = ["sha256"] }
 ``` 
 
 ## Development
