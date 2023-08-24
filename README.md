@@ -28,21 +28,21 @@ fn main() {
 
   // Iterate over a set of values and hash them together.
   // Make sure the value order is consistent.
-  // This example creates a sequence of ints from 1 to 9.
-    let sql = "
-  WITH RECURSIVE seq(value) AS (
-    SELECT 1 UNION ALL SELECT value + 1 FROM seq LIMIT 9
-  )
-  SELECT hex(sha256_concat(cast(value as text)))
-  FROM seq
-  ORDER BY value";
+  // This example creates a sequence of ints from 0 to 9.
+  let sql = "
+      WITH RECURSIVE sequence(value) AS (
+        SELECT 0 UNION ALL SELECT value + 1 FROM sequence LIMIT 10
+      )
+      SELECT hex(sha256_concat(cast(value as text)))
+      FROM sequence
+      ORDER BY value";
   let hash: String = db.query_row_and_then(&sql, [], |r| r.get(0)).unwrap();
-  assert_eq!(hash, "15E2B0D3C33891EBB0F1EF609EC419420C20E320CE94C65FBC8C3312448EB225");
+  assert_eq!(hash, "84D89877F0D4041EFB6BF91A16F0248F2FD573E6AF05C19F96BEDB9F882F7882");
   
   // The above sequence aggregation example is equivalent to this:
-  let sql = "SELECT hex(sha256('123456789'))";
+  let sql = "SELECT hex(sha256('0123456789'))";
   let hash: String = db.query_row_and_then(&sql, [], |r| r.get(0)).unwrap();
-  assert_eq!(hash, "15E2B0D3C33891EBB0F1EF609EC419420C20E320CE94C65FBC8C3312448EB225");
+  assert_eq!(hash, "84D89877F0D4041EFB6BF91A16F0248F2FD573E6AF05C19F96BEDB9F882F7882");
 }
 ```
 
