@@ -1,7 +1,8 @@
-use digest::Digest;
-use rusqlite::functions::{Aggregate, Context};
 use std::marker::PhantomData;
 use std::panic::{RefUnwindSafe, UnwindSafe};
+
+use digest::Digest;
+use rusqlite::functions::{Aggregate, Context};
 
 use crate::rusqlite::functions::FunctionFlags;
 use crate::rusqlite::types::{Type, ValueRef};
@@ -14,28 +15,37 @@ pub(crate) fn create_hash_fn<T: Digest + UnwindSafe + RefUnwindSafe + 'static>(
 ) -> Result<()> {
     conn.create_scalar_function(
         fn_name,
-        1,
+        -1,
         FunctionFlags::SQLITE_UTF8 | FunctionFlags::SQLITE_DETERMINISTIC,
         |ctx| {
-            if ctx.len() != 1 {
-                return Err(InvalidParameterCount(ctx.len(), 1));
+            let param_count = ctx.len();
+            if param_count == 0 {
+                return Err(InvalidParameterCount(param_count, 1));
             }
-            match ctx.get_raw(0) {
-                ValueRef::Text(v) | ValueRef::Blob(v) => {
-                    let mut digest = T::new();
-                    digest.update(v);
-                    Ok(Some(digest.finalize().to_vec()))
+            let mut digest = T::new();
+            let mut has_vals = false;
+            for idx in 0..param_count {
+                match ctx.get_raw(idx) {
+                    ValueRef::Text(v) | ValueRef::Blob(v) => {
+                        digest.update(v);
+                        has_vals = true;
+                    }
+                    ValueRef::Null => {}
+                    ValueRef::Integer(_) => Err(InvalidFunctionParameterType(0, Type::Integer))?,
+                    ValueRef::Real(_) => Err(InvalidFunctionParameterType(0, Type::Real))?,
                 }
-                ValueRef::Null => Ok(None),
-                ValueRef::Integer(_) => Err(InvalidFunctionParameterType(0, Type::Integer)),
-                ValueRef::Real(_) => Err(InvalidFunctionParameterType(0, Type::Real)),
             }
+            Ok(if has_vals {
+                Some(digest.finalize().to_vec())
+            } else {
+                None
+            })
         },
     )?;
 
     conn.create_aggregate_function(
         &format!("{fn_name}_concat"),
-        1,
+        -1,
         FunctionFlags::SQLITE_UTF8 | FunctionFlags::SQLITE_DETERMINISTIC,
         HashAggregate::<T>(PhantomData),
     )
@@ -53,19 +63,22 @@ impl<T: Digest + UnwindSafe + RefUnwindSafe> Aggregate<(bool, T), Option<Vec<u8>
     }
 
     fn step(&self, ctx: &mut Context<'_>, digest: &mut (bool, T)) -> Result<()> {
-        if ctx.len() != 1 {
-            return Err(InvalidParameterCount(ctx.len(), 1));
+        let param_count = ctx.len();
+        if param_count == 0 {
+            return Err(InvalidParameterCount(param_count, 1));
         }
-        match ctx.get_raw(0) {
-            ValueRef::Text(v) | ValueRef::Blob(v) => {
-                digest.0 = true;
-                digest.1.update(v);
-                Ok(())
+        for idx in 0..param_count {
+            match ctx.get_raw(idx) {
+                ValueRef::Text(v) | ValueRef::Blob(v) => {
+                    digest.0 = true;
+                    digest.1.update(v);
+                }
+                ValueRef::Null => {}
+                ValueRef::Integer(_) => Err(InvalidFunctionParameterType(0, Type::Integer))?,
+                ValueRef::Real(_) => Err(InvalidFunctionParameterType(0, Type::Real))?,
             }
-            ValueRef::Null => Ok(()),
-            ValueRef::Integer(_) => Err(InvalidFunctionParameterType(0, Type::Integer)),
-            ValueRef::Real(_) => Err(InvalidFunctionParameterType(0, Type::Real)),
         }
+        Ok(())
     }
 
     fn finalize(&self, _: &mut Context<'_>, digest: Option<(bool, T)>) -> Result<Option<Vec<u8>>> {

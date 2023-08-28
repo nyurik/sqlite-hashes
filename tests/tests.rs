@@ -11,7 +11,7 @@ pub fn is_null(db: &Connection, expr: &str) {
 
 pub fn is_err(db: &Connection, expr: &str) {
     let sql = format!("SELECT {expr}");
-    let res: Result<Vec<_>, Error> = db.query_row_and_then(&sql, [], |r| r.get(0));
+    let res: Result<Option<Vec<_>>, Error> = db.query_row_and_then(&sql, [], |r| r.get(0));
     assert!(res.is_err(), "asserting error result for {expr}");
 }
 
@@ -141,6 +141,20 @@ fn test_hex() {
                 sha256: "55c53f5d490297900cefa825d0c8e8e9532ee8a118abe7d8570762cd38be9818",
                 sha512: "650161856da7d9f818e6047cf6b2092bc7aa3767d3495cfbefe2b710ed684a43ba933ea8286ef67d975e64e0482e5ebe0701788989396545b6badb3b0a136f19",
             },
+            &Test {
+                expr: "HASH('', 'a', '123456789', x'', x'00', x'0123456789abcdef')",
+                md5: "357484b18bee5b6190cebd93c5a89a4e",
+                sha1: "af066c53d4e9e3d43690e46b228700e541d75187",
+                sha256: "a6482bb4fa2bcf19b4e7e06dd6e48651269020f35679f3e4d43af0dc6bb815a9",
+                sha512: "8aa00accb3bb3c17e44860b91f406d6bbca6c0aa8fc7e1192e3cb537a57019565e3267f7be9530adb6af5a50f67a1d1b17ab3fa24113b7caf6da316ac0a5b4e3",
+            },
+            &Test {
+                expr: "HASH(NULL, 'a', NULL, '123456789', x'', x'00', NULL, x'0123456789abcdef', NULL)",
+                md5: "357484b18bee5b6190cebd93c5a89a4e",
+                sha1: "af066c53d4e9e3d43690e46b228700e541d75187",
+                sha256: "a6482bb4fa2bcf19b4e7e06dd6e48651269020f35679f3e4d43af0dc6bb815a9",
+                sha512: "8aa00accb3bb3c17e44860b91f406d6bbca6c0aa8fc7e1192e3cb537a57019565e3267f7be9530adb6af5a50f67a1d1b17ab3fa24113b7caf6da316ac0a5b4e3",
+            },
         ] {
             #[cfg(feature = "md5")]
             hex(c, &hash(t.expr, "md5"), t.md5);
@@ -260,6 +274,22 @@ fn test_seq() {
                 sha256: "None",
                 sha512: "None",
             },
+            &TestSeq {
+                expr: "HASH(cast(value as text), cast((value+1) as blob))",
+                count: 1,
+                md5: "c20ad4d76fe97759aa27a0c99bff6710",
+                sha1: "7b52009b64fd0a2a49e6d8a939753077792b0554",
+                sha256: "6b51d431df5d7f141cbececcf79edf3dd861c3b4069f0b11661a3eefacbba918",
+                sha512: "5aadb45520dcd8726b2822a7a78bb53d794f557199d5d4abdedd2c55a4bd6ca73607605c558de3db80c8e86c3196484566163ed1327e82e8b6757d1932113cb8",
+            },
+            &TestSeq {
+                expr: "HASH(null, cast(value as text), cast((value+1) as blob), null)",
+                count: 1000,
+                md5: "ddb57ed155427267671e1b525d13e94e",
+                sha1: "c22425800e32485e480b8cfc757ec5364d877be2",
+                sha256: "d19ba4af1679ded018a97d9d8b46f15ae5271fa0d323bdf2f0226291b5f8750a",
+                sha512: "661875fdb49838bd3e6c34bf51c326d687c32f096dc44f3f4b52dcb44b7c838877aa7405868712d447e34a52f565092bfcdc57853319e91a7ab5e4f087c30589",
+            },
         ] {
             let cnv = |v| if v == "None" { None } else { Some(v) };
             #[cfg(feature = "md5")]
@@ -300,10 +330,12 @@ fn test_errors() {
         #[cfg(feature = "sha512")]
         "sha512_concat",
     ] {
+        // NULLs
         is_null(c, &hash("HASH(NULL)", func));
+        is_null(c, &hash("HASH(NULL, NULL, NULL)", func));
+        // Errors
         is_err(c, &hash("HASH(1)", func));
         is_err(c, &hash("HASH(0.42)", func));
         is_err(c, &hash("HASH()", func));
-        is_err(c, &hash("HASH('a', 'b')", func));
     }
 }
