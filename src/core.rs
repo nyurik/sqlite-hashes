@@ -13,6 +13,7 @@ pub(crate) fn create_hash_fn<T: Digest + UnwindSafe + RefUnwindSafe + 'static>(
     conn: &Connection,
     fn_name: &str,
 ) -> Result<()> {
+    println!("create_hash_fn {fn_name}");
     conn.create_scalar_function(
         fn_name,
         -1,

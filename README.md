@@ -7,7 +7,7 @@
 [![CI build](https://github.com/nyurik/sqlite-hashes/workflows/CI/badge.svg)](https://github.com/nyurik/sqlite-hashes/actions)
 
 
-Use this crate to add various hash functions to SQLite, including MD5, SHA1, SHA256, and SHA512. All functions support text and blob values. Functions support any number of parameters which will be hashed in order. `NULL` values will be ignored. The functions return a blob with the hash value unless all parameters are `NULL`, in which case `NULL` is returned.
+Use this crate to add various hash functions to SQLite, including MD5, SHA1, SHA224, SHA256, SHA384, and SHA512. All functions support text and blob values. Functions support any number of parameters which will be hashed in order. `NULL` values will be ignored. The functions return a blob with the hash value unless all parameters are `NULL`, in which case `NULL` is returned.
 
 There are also aggregate functions that compute combined hash over a set of values, e.g. `sha256_concat`. These functions are useful for computing hash over a set of values, e.g. a column in a table. The aggregate functions also support multiple values, so you can compute a hash over a set of columns, e.g. `sha256_concat(col1, col2, col3)` over a whole set. 
 
@@ -16,12 +16,13 @@ This crate uses [rusqlite](https://crates.io/crates/rusqlite) to add user-define
 ## Usage
 
 ```rust
-use sqlite_hashes::{register_sha256_function, rusqlite::Connection};
+use sqlite_hashes::{register_hash_functions, rusqlite::Connection};
 
 fn main() {
   // Connect to SQLite DB and register needed hashing functions
   let db = Connection::open_in_memory().unwrap();
-  register_sha256_function(&db).unwrap();
+  // can also use hash-specific ones like register_sha256_function(&db)  
+  register_hash_functions(&db).unwrap();
 
   // Hash 'password' using SHA-256, and dump it as a HEX string
   let sql = "SELECT hex(sha256('password'))";
