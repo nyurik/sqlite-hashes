@@ -74,8 +74,8 @@ impl<T: Digest + UnwindSafe + RefUnwindSafe> Aggregate<(bool, T), Option<Vec<u8>
                     digest.1.update(v);
                 }
                 ValueRef::Null => {}
-                ValueRef::Integer(_) => Err(InvalidFunctionParameterType(0, Type::Integer))?,
-                ValueRef::Real(_) => Err(InvalidFunctionParameterType(0, Type::Real))?,
+                ValueRef::Integer(_) => Err(InvalidFunctionParameterType(idx, Type::Integer))?,
+                ValueRef::Real(_) => Err(InvalidFunctionParameterType(idx, Type::Real))?,
             }
         }
         Ok(())
