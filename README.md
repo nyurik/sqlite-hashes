@@ -24,14 +24,19 @@ fn main() {
   // can also use hash-specific ones like register_sha256_function(&db)  
   register_hash_functions(&db).unwrap();
 
-  // Hash 'password' using SHA-256, and dump it as a HEX string
+  // Hash 'password' using SHA-256, and dump resulting BLOB as a HEX string
   let sql = "SELECT hex(sha256('password'))";
+  let hash: String = db.query_row_and_then(&sql, [], |r| r.get(0)).unwrap();
+  assert_eq!(hash, "5E884898DA28047151D0E56F8DC6292773603D0D6AABBDD62A11EF721D1542D8");
+
+  // Same as above, but use sha256_hex() function to dump the result as a HEX string directly
+  let sql = "SELECT sha256_hex('password')";
   let hash: String = db.query_row_and_then(&sql, [], |r| r.get(0)).unwrap();
   assert_eq!(hash, "5E884898DA28047151D0E56F8DC6292773603D0D6AABBDD62A11EF721D1542D8");
 
   // Hash 'pass' (as text) and 'word' (as blob) using SHA-256, and dump it as a HEX string
   // The result is the same as the above 'password' example.
-  let sql = "SELECT hex(sha256(cast('pass' as text), cast('word' as blob)))";
+  let sql = "SELECT sha256_hex(cast('pass' as text), cast('word' as blob))";
   let hash: String = db.query_row_and_then(&sql, [], |r| r.get(0)).unwrap();
   assert_eq!(hash, "5E884898DA28047151D0E56F8DC6292773603D0D6AABBDD62A11EF721D1542D8");
 
@@ -42,14 +47,14 @@ fn main() {
       WITH RECURSIVE sequence(value) AS (
         SELECT 0 UNION ALL SELECT value + 1 FROM sequence LIMIT 10
       )
-      SELECT hex(sha256_concat(cast(value as text)))
+      SELECT sha256_hex_concat(cast(value as text))
       FROM sequence
       ORDER BY value";
   let hash: String = db.query_row_and_then(&sql, [], |r| r.get(0)).unwrap();
   assert_eq!(hash, "84D89877F0D4041EFB6BF91A16F0248F2FD573E6AF05C19F96BEDB9F882F7882");
   
   // The above sequence aggregation example is equivalent to this:
-  let sql = "SELECT hex(sha256('0123456789'))";
+  let sql = "SELECT sha256_hex('0123456789')";
   let hash: String = db.query_row_and_then(&sql, [], |r| r.get(0)).unwrap();
   assert_eq!(hash, "84D89877F0D4041EFB6BF91A16F0248F2FD573E6AF05C19F96BEDB9F882F7882");
 }
@@ -60,7 +65,7 @@ By default, this crate will compile with all hash functions. You can enable just
 
 ```toml
 [dependencies]
-sqlite-hashes = { version = "0.3", default-features = false, features = ["sha256"] }
+sqlite-hashes = { version = "0.4", default-features = false, features = ["hex", "window", "sha256"] }
 ``` 
 
 ## Development

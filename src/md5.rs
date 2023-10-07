@@ -1,7 +1,7 @@
 use md5::Md5;
 
-use crate::core::create_hash_fn;
 use crate::rusqlite::{Connection, Result};
+use crate::scalar::create_hash_fn;
 
 /// Register the `md5` SQL function with the given `SQLite` connection.
 /// The function takes a single argument and returns the [MD5 hash](https://en.wikipedia.org/wiki/MD5) (blob) of that argument.

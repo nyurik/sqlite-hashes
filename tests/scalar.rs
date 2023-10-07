@@ -181,18 +181,21 @@ fn test_hex() {
             #[cfg(feature = "sha512")]
             hex(c, &hash(t.expr, "sha512"), t.sha512);
 
-            #[cfg(feature = "md5")]
-            hex(c, &hash(t.expr, "md5_concat"), t.md5);
-            #[cfg(feature = "sha1")]
-            hex(c, &hash(t.expr, "sha1_concat"), t.sha1);
-            #[cfg(feature = "sha224")]
-            hex(c, &hash(t.expr, "sha224_concat"), t.sha224);
-            #[cfg(feature = "sha256")]
-            hex(c, &hash(t.expr, "sha256_concat"), t.sha256);
-            #[cfg(feature = "sha384")]
-            hex(c, &hash(t.expr, "sha384_concat"), t.sha384);
-            #[cfg(feature = "sha512")]
-            hex(c, &hash(t.expr, "sha512_concat"), t.sha512);
+            #[cfg(feature = "aggregate")]
+            {
+                #[cfg(feature = "md5")]
+                hex(c, &hash(t.expr, "md5_concat"), t.md5);
+                #[cfg(feature = "sha1")]
+                hex(c, &hash(t.expr, "sha1_concat"), t.sha1);
+                #[cfg(feature = "sha224")]
+                hex(c, &hash(t.expr, "sha224_concat"), t.sha224);
+                #[cfg(feature = "sha256")]
+                hex(c, &hash(t.expr, "sha256_concat"), t.sha256);
+                #[cfg(feature = "sha384")]
+                hex(c, &hash(t.expr, "sha384_concat"), t.sha384);
+                #[cfg(feature = "sha512")]
+                hex(c, &hash(t.expr, "sha512_concat"), t.sha512);
+            }
         }
 }
 
@@ -241,22 +244,26 @@ fn test_txt() {
             #[cfg(feature = "sha512")]
             txt(c, &hash(t.expr, "sha512"), t.sha512);
 
-            #[cfg(feature = "md5")]
-            txt(c, &hash(t.expr, "md5_concat"), t.md5);
-            #[cfg(feature = "sha1")]
-            txt(c, &hash(t.expr, "sha1_concat"), t.sha1);
-            #[cfg(feature = "sha224")]
-            txt(c, &hash(t.expr, "sha224_concat"), t.sha224);
-            #[cfg(feature = "sha256")]
-            txt(c, &hash(t.expr, "sha256_concat"), t.sha256);
-            #[cfg(feature = "sha384")]
-            txt(c, &hash(t.expr, "sha384_concat"), t.sha384);
-            #[cfg(feature = "sha512")]
-            txt(c, &hash(t.expr, "sha512_concat"), t.sha512);
+            #[cfg(feature = "aggregate")]
+            {
+                #[cfg(feature = "md5")]
+                txt(c, &hash(t.expr, "md5_concat"), t.md5);
+                #[cfg(feature = "sha1")]
+                txt(c, &hash(t.expr, "sha1_concat"), t.sha1);
+                #[cfg(feature = "sha224")]
+                txt(c, &hash(t.expr, "sha224_concat"), t.sha224);
+                #[cfg(feature = "sha256")]
+                txt(c, &hash(t.expr, "sha256_concat"), t.sha256);
+                #[cfg(feature = "sha384")]
+                txt(c, &hash(t.expr, "sha384_concat"), t.sha384);
+                #[cfg(feature = "sha512")]
+                txt(c, &hash(t.expr, "sha512_concat"), t.sha512);
+            }
         }
 }
 
 #[test]
+#[cfg(feature = "aggregate")]
 fn test_seq() {
     let c = &get_connection();
     for t in &[
@@ -363,27 +370,28 @@ fn test_errors() {
     for func in &[
         #[cfg(feature = "md5")]
         "md5",
-        #[cfg(feature = "md5")]
-        "md5_concat",
         #[cfg(feature = "sha1")]
         "sha1",
-        #[cfg(feature = "sha1")]
-        "sha1_concat",
         #[cfg(feature = "sha224")]
         "sha224",
-        #[cfg(feature = "sha224")]
-        "sha224_concat",
         #[cfg(feature = "sha256")]
         "sha256",
-        #[cfg(feature = "sha256")]
-        "sha256_concat",
         #[cfg(feature = "sha384")]
         "sha384",
-        #[cfg(feature = "sha384")]
-        "sha384_concat",
         #[cfg(feature = "sha512")]
         "sha512",
-        #[cfg(feature = "sha512")]
+        // Aggregate functions
+        #[cfg(all(feature = "aggregate", feature = "md5"))]
+        "md5_concat",
+        #[cfg(all(feature = "aggregate", feature = "sha1"))]
+        "sha1_concat",
+        #[cfg(all(feature = "aggregate", feature = "sha224"))]
+        "sha224_concat",
+        #[cfg(all(feature = "aggregate", feature = "sha256"))]
+        "sha256_concat",
+        #[cfg(all(feature = "aggregate", feature = "sha384"))]
+        "sha384_concat",
+        #[cfg(all(feature = "aggregate", feature = "sha512"))]
         "sha512_concat",
     ] {
         // NULLs

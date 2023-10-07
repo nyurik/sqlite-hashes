@@ -22,5 +22,5 @@ use crate::rusqlite::{Connection, Result};
 /// # }
 /// ```
 pub fn register_sha256_function(conn: &Connection) -> Result<()> {
-    crate::core::create_hash_fn::<Sha256>(conn, "sha256")
+    crate::scalar::create_hash_fn::<Sha256>(conn, "sha256")
 }

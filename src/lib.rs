@@ -15,7 +15,9 @@ compile_error!(
 /// Re-export of the [`rusqlite`](https://crates.io/crates/rusqlite) crate to avoid version conflicts.
 pub use rusqlite;
 
-mod core;
+#[cfg(feature = "aggregate")]
+mod aggregate;
+mod scalar;
 
 #[cfg(feature = "md5")]
 mod md5;
