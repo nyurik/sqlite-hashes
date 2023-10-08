@@ -165,7 +165,7 @@ impl<T: Digest + Clone + UnwindSafe + RefUnwindSafe> WindowAggregate<AggState<T>
         trace!("{}: WindowAggregate::inverse", self.fn_name);
         Err(UserFunctionError(
             format!(
-                "Function {}() does not support Window size.  Use ordering only.",
+                "Function {}() does not support moving windows. The lower window bound must always be fixed. See README.",
                 self.fn_name
             )
             .into(),

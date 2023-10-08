@@ -1,79 +1,144 @@
 #![cfg(feature = "aggregate")]
-#![allow(dead_code)]
 
-use insta::assert_snapshot;
-use rusqlite::types::FromSql;
-use rusqlite::Connection;
+#[macro_use]
+#[path = "_utils.rs"]
+mod utils;
+use crate::utils::Conn;
 
 #[ctor::ctor]
 fn init() {
     let _ = env_logger::builder().is_test(true).try_init();
 }
 
-struct Conn(Connection);
+#[test]
+fn simple_concat() {
+    let c = Conn::new();
+    test_all!(c.select("_concat(NULL)"), NULL);
+    test_all!(c.select("_concat(NULL, NULL, NULL)"), NULL);
+    test_all!(c.select("_concat(1)"), ERROR);
+    test_all!(c.select("_concat(0.42)"), ERROR);
+    test_all!(c.select("_concat()"), ERROR);
+    test_all!(c.select("_concat('')"), blob(""));
+    test_all!(c.select("_concat('a')"), blob("a"));
+    test_all!(c.select("_concat('123456789')"), blob("123456789"));
+    test_all!(c.select("_concat(x'')"), blob(""));
+    test_all!(c.select("_concat(x'00')"), blob("\0"));
+    test_all!(
+        c.select("_concat(x'0123456789abcdef')"),
+        bytes_as_blob(b"\x01\x23\x45\x67\x89\xab\xcd\xef")
+    );
+    test_all!(
+        c.select("_concat('', 'a', '123456789', x'', x'00', x'0123456789abcdef')"),
+        bytes_as_blob(b"a123456789\x00\x01\x23\x45\x67\x89\xab\xcd\xef")
+    );
+    test_all!(
+        c.select(
+            "_concat(NULL, 'a', NULL, '123456789', x'', x'00', NULL, x'0123456789abcdef', NULL)"
+        ),
+        bytes_as_blob(b"a123456789\x00\x01\x23\x45\x67\x89\xab\xcd\xef")
+    );
+}
 
-impl Conn {
-    fn new() -> Self {
-        let db = Connection::open_in_memory().unwrap();
-        sqlite_hashes::register_hash_functions(&db).unwrap();
-        db.execute_batch(
-            "
-CREATE TABLE tbl(a INTEGER PRIMARY KEY, b TEXT);
-INSERT INTO tbl VALUES (1, 'bbb'), (2, 'ccc'), (3, 'aaa');
-",
-        )
-        .unwrap();
-        Self(db)
-    }
-
-    fn sql<T: FromSql>(&self, query: &str) -> T {
-        self.0.query_row_and_then(query, [], |r| r.get(0)).unwrap()
-    }
-
-    fn str(&self, query: &str) -> String {
-        self.sql(query)
-    }
-
-    /// The ordering here is un-documented and may change in the future.
-    fn legacy_aggregate(&self, hash: &str) -> String {
-        let sql = format!("SELECT {hash} FROM (SELECT b FROM tbl ORDER BY b)");
-        self.str(&sql)
-    }
+#[test]
+#[cfg(feature = "hex")]
+fn simple_concat_hex() {
+    let c = Conn::new();
+    test_all!(c.select("_concat_hex(NULL)"), NULL);
+    test_all!(c.select("_concat_hex(NULL, NULL, NULL)"), NULL);
+    test_all!(c.select("_concat_hex(1)"), ERROR);
+    test_all!(c.select("_concat_hex(0.42)"), ERROR);
+    test_all!(c.select("_concat_hex()"), ERROR);
+    test_all!(c.select("_concat_hex('')"), hex(""));
+    test_all!(c.select("_concat_hex('a')"), hex("a"));
+    test_all!(c.select("_concat_hex('123456789')"), hex("123456789"));
+    test_all!(c.select("_concat_hex(x'')"), hex(""));
+    test_all!(c.select("_concat_hex(x'00')"), hex("\0"));
+    test_all!(
+        c.select("_concat_hex(x'0123456789abcdef')"),
+        bytes_as_hex(b"\x01\x23\x45\x67\x89\xab\xcd\xef")
+    );
+    test_all!(
+        c.select("_concat_hex('', 'a', '123456789', x'', x'00', x'0123456789abcdef')"),
+        bytes_as_hex(b"a123456789\x00\x01\x23\x45\x67\x89\xab\xcd\xef")
+    );
+    test_all!(
+        c.select("_concat_hex(NULL, 'a', NULL, '123456789', x'', x'00', NULL, x'0123456789abcdef', NULL)"),
+        bytes_as_hex(b"a123456789\x00\x01\x23\x45\x67\x89\xab\xcd\xef")
+    );
 }
 
 #[test]
 fn hash_concat() {
     let c = Conn::new();
-
-    #[cfg(feature = "md5")]
-    assert_snapshot!(c.legacy_aggregate("hex(md5_concat(b))"), @"D1AAF4767A3C10A473407A4E47B02DA6");
-    #[cfg(feature = "sha1")]
-    assert_snapshot!(c.legacy_aggregate("hex(sha1_concat(b))"), @"395E4981D467D1BD120DFB708ED4E3869C34BC04");
-    #[cfg(feature = "sha224")]
-    assert_snapshot!(c.legacy_aggregate("hex(sha224_concat(b))"), @"43A9BF6E729C8E813F4BAC4E5D9F6720338EF646FFF8B012D3D0AB36");
-    #[cfg(feature = "sha256")]
-    assert_snapshot!(c.legacy_aggregate("hex(sha256_concat(b))"), @"FB84A45F6DF7D1D17036F939F1CFEB87339FF5DBDF411222F3762DD76779A287");
-    #[cfg(feature = "sha384")]
-    assert_snapshot!(c.legacy_aggregate("hex(sha384_concat(b))"), @"4936373522EEB4FEA02B9F3F8B96E13ACD5E760FF765DEE10B74E7FFE1D3BFB33A93DC63B013DAB9F59FAEEC3205B5BE");
-    #[cfg(feature = "sha512")]
-    assert_snapshot!(c.legacy_aggregate("hex(sha512_concat(b))"), @"EEC013A2A7208C51FD20F975AAD231B2E21E7C1D9E228B2480E33C8F52AC482D82C8514CBEB6036D7FC76CB6262AE5780BBC628B0A6F2DF32E5255A21D4732F4");
+    test_all!(c.legacy_aggregate(*_concat), blob("aaabbbccc"));
 }
 
 #[test]
 #[cfg(feature = "hex")]
-fn hash_hex_concat() {
+fn hash_concat_hex() {
+    let c = Conn::new();
+    test_all!(c.legacy_aggregate(*_concat_hex), hex("aaabbbccc"));
+}
+
+#[test]
+fn concat_sequence() {
     let c = Conn::new();
 
-    #[cfg(feature = "md5")]
-    assert_snapshot!(c.legacy_aggregate("md5_hex_concat(b)"), @"D1AAF4767A3C10A473407A4E47B02DA6");
-    #[cfg(feature = "sha1")]
-    assert_snapshot!(c.legacy_aggregate("sha1_hex_concat(b)"), @"395E4981D467D1BD120DFB708ED4E3869C34BC04");
-    #[cfg(feature = "sha224")]
-    assert_snapshot!(c.legacy_aggregate("sha224_hex_concat(b)"), @"43A9BF6E729C8E813F4BAC4E5D9F6720338EF646FFF8B012D3D0AB36");
-    #[cfg(feature = "sha256")]
-    assert_snapshot!(c.legacy_aggregate("sha256_hex_concat(b)"), @"FB84A45F6DF7D1D17036F939F1CFEB87339FF5DBDF411222F3762DD76779A287");
-    #[cfg(feature = "sha384")]
-    assert_snapshot!(c.legacy_aggregate("sha384_hex_concat(b)"), @"4936373522EEB4FEA02B9F3F8B96E13ACD5E760FF765DEE10B74E7FFE1D3BFB33A93DC63B013DAB9F59FAEEC3205B5BE");
-    #[cfg(feature = "sha512")]
-    assert_snapshot!(c.legacy_aggregate("sha512_hex_concat(b)"), @"EEC013A2A7208C51FD20F975AAD231B2E21E7C1D9E228B2480E33C8F52AC482D82C8514CBEB6036D7FC76CB6262AE5780BBC628B0A6F2DF32E5255A21D4732F4");
+    test_all!(c.seq_0("_concat(cast(v as text))"), NULL);
+    test_all!(c.seq_0("_concat(cast(v as blob))"), NULL);
+
+    test_all!(c.seq_1("_concat(cast(v as text))"), blob("1"));
+    test_all!(c.seq_1("_concat(cast(v as blob))"), blob("1"));
+    test_all!(
+        c.seq_1("_concat(cast(v as text), cast((v+1) as blob))"),
+        blob("12")
+    );
+
+    let expected = (1..=1000)
+        .map(|i| i.to_string())
+        .collect::<Vec<String>>()
+        .join("");
+    test_all!(c.seq_1000("_concat(cast(v as text))"), blob(expected));
+    test_all!(c.seq_1000("_concat(cast(v as blob))"), blob(expected));
+
+    let expected = (1..=1000)
+        .map(|i| format!("{}{}", i, i + 1))
+        .collect::<Vec<String>>()
+        .join("");
+    test_all!(
+        c.seq_1000("_concat(null, cast(v as text), cast((v+1) as blob), null)"),
+        blob(expected)
+    );
+}
+
+#[test]
+#[cfg(feature = "hex")]
+fn concat_sequence_hex() {
+    let c = Conn::new();
+
+    test_all!(c.seq_0("_concat_hex(cast(v as text))"), NULL);
+    test_all!(c.seq_0("_concat_hex(cast(v as blob))"), NULL);
+
+    test_all!(c.seq_1("_concat_hex(cast(v as text))"), hex("1"));
+    test_all!(c.seq_1("_concat_hex(cast(v as blob))"), hex("1"));
+    test_all!(
+        c.seq_1("_concat_hex(cast(v as text), cast((v+1) as blob))"),
+        hex("12")
+    );
+
+    let expected = (1..=1000)
+        .map(|i| i.to_string())
+        .collect::<Vec<String>>()
+        .join("");
+    test_all!(c.seq_1000("_concat_hex(cast(v as text))"), hex(expected));
+    test_all!(c.seq_1000("_concat_hex(cast(v as blob))"), hex(expected));
+
+    let expected = (1..=1000)
+        .map(|i| format!("{}{}", i, i + 1))
+        .collect::<Vec<String>>()
+        .join("");
+    test_all!(
+        c.seq_1000("_concat_hex(null, cast(v as text), cast((v+1) as blob), null)"),
+        hex(expected)
+    );
 }

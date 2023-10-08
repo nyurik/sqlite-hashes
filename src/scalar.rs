@@ -49,7 +49,7 @@ pub(crate) fn create_hash_fn<T: Digest + Clone + UnwindSafe + RefUnwindSafe + 's
     #[cfg(all(feature = "aggregate", feature = "hex"))]
     {
         use crate::aggregate::AggHexType;
-        let fn_name = format!("{fn_name}_hex_concat");
+        let fn_name = format!("{fn_name}_concat_hex");
         create_agg_function(
             conn,
             &fn_name,
