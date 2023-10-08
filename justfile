@@ -30,3 +30,15 @@ test:
 # Test documentation
 test-doc:
     cargo test --doc
+
+# Run integration tests and save its output as the new expected output
+bless *ARGS: (cargo-install "insta" "cargo-insta")
+    cargo insta test --accept --unreferenced=auto --all-features {{ ARGS }}
+
+# Check if a certain Cargo command is installed, and install it if needed
+[private]
+cargo-install $COMMAND $INSTALL_CMD="" *ARGS="":
+    @if ! command -v $COMMAND &> /dev/null; then \
+        echo "$COMMAND could not be found. Installing it with    cargo install ${INSTALL_CMD:-$COMMAND} {{ ARGS }}" ;\
+        cargo install ${INSTALL_CMD:-$COMMAND} {{ ARGS }} ;\
+    fi
