@@ -68,9 +68,9 @@ The hashing window functions will only work if the starting point of the window 
 ```sql
 SELECT coalesce(
     (SELECT sha256_concat_hex(v)
-            OVER (ORDER BY zoom_level, tile_column, tile_row ROWS
+            OVER (ORDER BY v ROWS
                   BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING)
-     FROM tiles
+     FROM tbl
      LIMIT 1),
     sha256_hex('')
 );
