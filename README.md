@@ -15,7 +15,7 @@ This crate uses [rusqlite](https://crates.io/crates/rusqlite) to add user-define
 
 ### Scalar functions
 
-There are two types of scalar functions, e.g. `sha256(...)` and `sha256_hex(...)`. The first one returns a blob, and the second one returns a hex string.  All functions can hash text and blob values, but will raise an error on other types. Functions support any number of arguments, e.g. `sha256(a, b, c, ...)`, hashing them in order. All `NULL` values will be ignored. If all function parameters are `NULL`, the result is `NULL`. You may include an empty string param to force a non-NULL value, e.g. `sha256(a, b, c, '')`.
+There are two types of scalar functions, e.g. `sha256(...)` and `sha256_hex(...)`. The first one returns a blob, and the second one returns a hex string.  All functions can hash text and blob values, but will raise an error on other types. Functions support any number of arguments, e.g. `sha256(a, b, c, ...)`, hashing them in order. All `NULL` values will be ignored. If all function parameters are `NULL`, the result is `NULL`. You may include an empty string param to always get a non-NULL value, e.g. `sha256(a, b, c, '')`.
 
 ```rust
 use sqlite_hashes::{register_hash_functions, rusqlite::Connection};
@@ -27,18 +27,18 @@ fn main() {
     register_hash_functions(&db).unwrap();
 
     // Hash 'password' using SHA-256, and dump resulting BLOB as a HEX string
-    let sql = "SELECT hex(sha256('password'))";
+    let sql = "SELECT hex(sha256('password'));";
     let hash: String = db.query_row_and_then(&sql, [], |r| r.get(0)).unwrap();
     assert_eq!(hash, "5E884898DA28047151D0E56F8DC6292773603D0D6AABBDD62A11EF721D1542D8");
 
     // Same as above, but use sha256_hex() function to dump the result as a HEX string directly
-    let sql = "SELECT sha256_hex('password')";
+    let sql = "SELECT sha256_hex('password');";
     let hash: String = db.query_row_and_then(&sql, [], |r| r.get(0)).unwrap();
     assert_eq!(hash, "5E884898DA28047151D0E56F8DC6292773603D0D6AABBDD62A11EF721D1542D8");
 
     // Hash 'pass' (as text) and 'word' (as blob) using SHA-256, and dump it as a HEX string
     // The result is the same as the above 'password' example.
-    let sql = "SELECT sha256_hex(cast('pass' as text), cast('word' as blob))";
+    let sql = "SELECT sha256_hex(cast('pass' as text), cast('word' as blob));";
     let hash: String = db.query_row_and_then(&sql, [], |r| r.get(0)).unwrap();
     assert_eq!(hash, "5E884898DA28047151D0E56F8DC6292773603D0D6AABBDD62A11EF721D1542D8");
 }
@@ -49,9 +49,9 @@ When `aggregate` or `window` feature is enabled (default), there are functions t
 
 #### IMPORTANT NOTE: ORDERING
 
-SQLite does NOT guarantee the order of rows when executing aggregate functions. A query `SELECT group_concat(v) FROM tbl ORDER BY v` will NOT concatenate values in sorted order, but will use some internal storage order instead. Other databases like PostgreSQL support `SELECT string_agg(v ORDER BY v) FROM tbl`, but SQLite does not.
+SQLite does NOT guarantee the order of rows when executing aggregate functions. A query `SELECT group_concat(v) FROM tbl ORDER BY v;` will NOT concatenate values in sorted order, but will use some internal storage order instead. Other databases like PostgreSQL support `SELECT string_agg(v ORDER BY v) FROM tbl;`, but SQLite does not.
 
-One common workaround is to use a subquery, e.g. `SELECT group_concat(v) FROM (SELECT v FROM tbl ORDER BY v)`. This is NOT guaranteed to work in future versions of SQLite. See [discussion](https://sqlite.org/forum/info/a49d9c4083b5350c) for more details.
+One common workaround is to use a subquery, e.g. `SELECT group_concat(v) FROM (SELECT v FROM tbl ORDER BY v);`. This is NOT guaranteed to work in future versions of SQLite. See [discussion](https://sqlite.org/forum/info/a49d9c4083b5350c) for more details.
 
 In order to guarantee the ordering, you must use a window function. 
 
@@ -60,10 +60,22 @@ SELECT sha256_concat_hex(v)
        OVER (ORDER BY v ROWS
              BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING)
 FROM tbl
-LIMIT 1
+LIMIT 1;
 ```
 
-The hashing window functions will only work if the starting point of the window is not moving.  
+The hashing window functions will only work if the starting point of the window is not moving (`UNBOUNDED PRECEDING`). To force a non-NULL value, use COALESCE:
+
+```sql
+SELECT coalesce(
+    (SELECT sha256_concat_hex(v)
+            OVER (ORDER BY zoom_level, tile_column, tile_row ROWS
+                  BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING)
+     FROM tiles
+     LIMIT 1),
+    sha256_hex('')
+);
+```
+
 Note that window functions are only available in SQLite 3.25 and later, so a bundled SQLite version must be used, at least for now.
 
 ```rust 
@@ -80,12 +92,12 @@ fn main() {
 
   let sql = "SELECT sha256_concat_hex(v) OVER (
     ORDER BY v ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING)
-    FROM tbl LIMIT 1";
+    FROM tbl LIMIT 1;";
   let hash: String = db.query_row_and_then(&sql, [], |r| r.get(0)).unwrap();
   assert_eq!(hash, "FB84A45F6DF7D1D17036F939F1CFEB87339FF5DBDF411222F3762DD76779A287");
   
   // The above window aggregation example is equivalent to this scalar hash:
-  let sql = "SELECT sha256_hex('aaabbbccc')";
+  let sql = "SELECT sha256_hex('aaabbbccc');";
   let hash: String = db.query_row_and_then(&sql, [], |r| r.get(0)).unwrap();
   assert_eq!(hash, "FB84A45F6DF7D1D17036F939F1CFEB87339FF5DBDF411222F3762DD76779A287");
 }
