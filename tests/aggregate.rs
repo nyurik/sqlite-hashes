@@ -43,8 +43,8 @@ fn simple_concat() {
 #[cfg(feature = "hex")]
 fn simple_concat_hex() {
     let c = Conn::new();
-    test_all!(c.select("_concat_hex(NULL)"), NULL);
-    test_all!(c.select("_concat_hex(NULL, NULL, NULL)"), NULL);
+    test_all!(c.select("_concat_hex(NULL)"), EMPTY);
+    test_all!(c.select("_concat_hex(NULL, NULL, NULL)"), EMPTY);
     test_all!(c.select("_concat_hex(1)"), ERROR);
     test_all!(c.select("_concat_hex(0.42)"), ERROR);
     test_all!(c.select("_concat_hex()"), ERROR);
@@ -70,14 +70,17 @@ fn simple_concat_hex() {
 #[test]
 fn hash_concat() {
     let c = Conn::new();
-    test_all!(c.legacy_aggregate(*_concat), blob("aaabbbccc"));
+    test_all!(c.legacy_text_aggregate(*_concat), blob("aaabbbccc"));
+    test_all!(c.legacy_blob_aggregate(*_concat), blob("aaabbbccc"));
+    test_all!(c.legacy_null_text_aggregate(*_concat), NULL);
+    test_all!(c.legacy_null_blob_aggregate(*_concat), NULL);
 }
 
 #[test]
 #[cfg(feature = "hex")]
 fn hash_concat_hex() {
     let c = Conn::new();
-    test_all!(c.legacy_aggregate(*_concat_hex), hex("aaabbbccc"));
+    test_all!(c.legacy_text_aggregate(*_concat_hex), hex("aaabbbccc"));
 }
 
 #[test]
@@ -118,6 +121,9 @@ fn concat_sequence_hex() {
 
     test_all!(c.seq_0("_concat_hex(cast(v as text))"), NULL);
     test_all!(c.seq_0("_concat_hex(cast(v as blob))"), NULL);
+
+    test_all!(c.seq_1("_concat_hex(cast(NULL as text))"), EMPTY);
+    test_all!(c.seq_1("_concat_hex(cast(NULL as blob))"), EMPTY);
 
     test_all!(c.seq_1("_concat_hex(cast(v as text))"), hex("1"));
     test_all!(c.seq_1("_concat_hex(cast(v as blob))"), hex("1"));

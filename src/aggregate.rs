@@ -1,6 +1,7 @@
+#![cfg(feature = "aggregate")]
+
 #[cfg(feature = "trace")]
 use std::borrow::Cow;
-use std::marker::PhantomData;
 use std::panic::{RefUnwindSafe, UnwindSafe};
 
 use digest::Digest;
@@ -18,6 +19,7 @@ use rusqlite::{Connection, ToSql};
 use crate::rusqlite::types::{Type, ValueRef};
 use crate::rusqlite::Error::{InvalidFunctionParameterType, InvalidParameterCount};
 use crate::rusqlite::Result;
+use crate::state::HashState;
 
 #[cfg(not(feature = "trace"))]
 macro_rules! trace {
@@ -60,61 +62,41 @@ where
     )
 }
 
-#[derive(Debug)]
-pub struct AggState<T>(Option<T>);
-
-impl<T: Digest + Clone + Clone> AggState<T> {
-    pub fn new() -> Self {
-        Self(None)
-    }
-
-    pub fn add_value(&mut self, value: &[u8]) {
-        self.0.get_or_insert_with(T::new).update(value);
-    }
-
-    #[cfg(feature = "window")]
-    pub fn calc(&self) -> Option<Vec<u8>> {
-        self.0.as_ref().map(|v| v.clone().finalize().to_vec())
-    }
-
-    pub fn finalize(self) -> Option<Vec<u8>> {
-        self.0.map(|v| v.finalize().to_vec())
-    }
-}
-
-pub struct AggType<T> {
+pub struct AggType<D, R> {
     #[cfg(any(feature = "window", feature = "trace"))]
     fn_name: String,
-    digest_type: PhantomData<T>,
+    #[cfg(feature = "window")]
+    to_value: fn(&HashState<D>) -> Option<R>,
+    to_final: fn(HashState<D>) -> Option<R>,
 }
 
-impl<T: Digest + Clone + UnwindSafe + RefUnwindSafe> AggType<T> {
-    #[cfg(any(feature = "window", feature = "trace"))]
-    pub fn new(fn_name: String) -> Self {
+impl<D: Digest + Clone + UnwindSafe + RefUnwindSafe, R> AggType<D, R> {
+    pub fn new(
+        #[cfg(any(feature = "window", feature = "trace"))] fn_name: String,
+        #[cfg(feature = "window")] to_value: fn(&HashState<D>) -> Option<R>,
+        to_final: fn(HashState<D>) -> Option<R>,
+    ) -> Self {
         Self {
+            #[cfg(any(feature = "window", feature = "trace"))]
             fn_name: fn_name.to_ascii_uppercase(),
-            digest_type: PhantomData,
-        }
-    }
-    #[cfg(not(any(feature = "window", feature = "trace")))]
-    pub fn new() -> Self {
-        Self {
-            digest_type: PhantomData,
+            #[cfg(feature = "window")]
+            to_value,
+            to_final,
         }
     }
 }
 
-impl<T: Digest + Clone + UnwindSafe + RefUnwindSafe> Aggregate<AggState<T>, Option<Vec<u8>>>
-    for AggType<T>
+impl<T: Digest + Clone + UnwindSafe + RefUnwindSafe, R: ToSql> Aggregate<HashState<T>, Option<R>>
+    for AggType<T, R>
 {
-    fn init(&self, _: &mut Context<'_>) -> Result<AggState<T>> {
+    fn init(&self, _: &mut Context<'_>) -> Result<HashState<T>> {
         trace!("{}: Aggregate::init", self.fn_name);
         // Keep track if any non-null values were added or not.
         // If there are, a non-null digest is returned.
-        Ok(AggState::new())
+        Ok(HashState::default())
     }
 
-    fn step(&self, ctx: &mut Context<'_>, agg: &mut AggState<T>) -> Result<()> {
+    fn step(&self, ctx: &mut Context<'_>, agg: &mut HashState<T>) -> Result<()> {
         let param_count = ctx.len();
         if param_count == 0 {
             return Err(InvalidParameterCount(param_count, 1));
@@ -138,6 +120,7 @@ impl<T: Digest + Clone + UnwindSafe + RefUnwindSafe> Aggregate<AggState<T>, Opti
                 }
                 ValueRef::Null => {
                     trace!("{}: arg{idx} -> ignoring step(NULL)", self.fn_name);
+                    agg.add_null();
                 }
                 ValueRef::Integer(_) => Err(InvalidFunctionParameterType(idx, Type::Integer))?,
                 ValueRef::Real(_) => Err(InvalidFunctionParameterType(idx, Type::Real))?,
@@ -146,74 +129,29 @@ impl<T: Digest + Clone + UnwindSafe + RefUnwindSafe> Aggregate<AggState<T>, Opti
         Ok(())
     }
 
-    fn finalize(&self, _: &mut Context<'_>, agg: Option<AggState<T>>) -> Result<Option<Vec<u8>>> {
+    fn finalize(&self, _: &mut Context<'_>, agg: Option<HashState<T>>) -> Result<Option<R>> {
         trace!("{}: Aggregate::finalize", self.fn_name);
-        Ok(agg.and_then(|v| v.finalize()))
+        match agg {
+            Some(agg) => Ok((self.to_final)(agg)),
+            None => Ok(None),
+        }
     }
 }
 
 #[cfg(feature = "window")]
-impl<T: Digest + Clone + UnwindSafe + RefUnwindSafe> WindowAggregate<AggState<T>, Option<Vec<u8>>>
-    for AggType<T>
+impl<T: Digest + Clone + UnwindSafe + RefUnwindSafe, R: ToSql>
+    WindowAggregate<HashState<T>, Option<R>> for AggType<T, R>
 {
-    fn value(&self, agg: Option<&AggState<T>>) -> Result<Option<Vec<u8>>> {
+    fn value(&self, agg: Option<&HashState<T>>) -> Result<Option<R>> {
         trace!("{}: WindowAggregate::value", self.fn_name);
-        Ok(agg.and_then(|v| v.calc()))
+        Ok(agg.and_then(|v| (self.to_value)(v)))
     }
 
-    fn inverse(&self, _: &mut Context<'_>, _: &mut AggState<T>) -> Result<()> {
-        trace!("{}: WindowAggregate::inverse", self.fn_name);
+    fn inverse(&self, _: &mut Context<'_>, _: &mut HashState<T>) -> Result<()> {
+        let fn_name = &self.fn_name;
+        trace!("{fn_name}: WindowAggregate::inverse");
         Err(UserFunctionError(
-            format!(
-                "Function {}() does not support moving windows. The lower window bound must always be fixed. See README.",
-                self.fn_name
-            )
-            .into(),
+            format!("Function {fn_name}() does not support moving windows. The lower window bound must always be fixed. See README.").into(),
         ))
-    }
-}
-
-#[cfg(feature = "hex")]
-pub struct AggHexType<T>(AggType<T>);
-
-#[cfg(feature = "hex")]
-impl<T: Digest + Clone + UnwindSafe + RefUnwindSafe> AggHexType<T> {
-    #[cfg(any(feature = "window", feature = "trace"))]
-    pub fn new(fn_name: String) -> Self {
-        Self(AggType::new(fn_name))
-    }
-    #[cfg(not(any(feature = "window", feature = "trace")))]
-    pub fn new() -> Self {
-        Self(AggType::new())
-    }
-}
-
-#[cfg(feature = "hex")]
-impl<T: Digest + Clone + UnwindSafe + RefUnwindSafe> Aggregate<AggState<T>, Option<String>>
-    for AggHexType<T>
-{
-    fn init(&self, ctx: &mut Context<'_>) -> Result<AggState<T>> {
-        self.0.init(ctx)
-    }
-
-    fn step(&self, ctx: &mut Context<'_>, acc: &mut AggState<T>) -> Result<()> {
-        self.0.step(ctx, acc)
-    }
-
-    fn finalize(&self, ctx: &mut Context<'_>, acc: Option<AggState<T>>) -> Result<Option<String>> {
-        crate::scalar::to_hex(self.0.finalize(ctx, acc))
-    }
-}
-
-#[cfg(all(feature = "window", feature = "hex"))]
-impl<T: Digest + Clone + UnwindSafe + RefUnwindSafe> WindowAggregate<AggState<T>, Option<String>>
-    for AggHexType<T>
-{
-    fn value(&self, agg: Option<&AggState<T>>) -> Result<Option<String>> {
-        crate::scalar::to_hex(self.0.value(agg))
-    }
-
-    fn inverse(&self, ctx: &mut Context<'_>, agg: &mut AggState<T>) -> Result<()> {
-        self.0.inverse(ctx, agg)
     }
 }

@@ -1,8 +1,6 @@
 use std::panic::{RefUnwindSafe, UnwindSafe};
 
 use digest::Digest;
-#[cfg(feature = "hex")]
-use hex::ToHex as _;
 #[cfg(feature = "trace")]
 use log::trace;
 use rusqlite::functions::Context;
@@ -14,48 +12,93 @@ use crate::rusqlite::functions::FunctionFlags;
 use crate::rusqlite::types::{Type, ValueRef};
 use crate::rusqlite::Error::{InvalidFunctionParameterType, InvalidParameterCount};
 use crate::rusqlite::{Connection, Result};
+use crate::state::HashState;
 
 #[cfg(not(feature = "trace"))]
 macro_rules! trace {
     ($($arg:tt)*) => {};
 }
 
-pub(crate) fn create_hash_fn<T: Digest + Clone + UnwindSafe + RefUnwindSafe + 'static>(
+pub trait NamedDigest: Digest {
+    fn name() -> &'static str;
+}
+
+macro_rules! digest_names {
+    ($($typ:ty => $name:literal),* $(,)?) => {
+        $(
+            #[cfg(feature = $name)]
+            impl NamedDigest for $typ {
+                fn name() -> &'static str {
+                    $name
+                }
+            }
+        )*
+    };
+}
+
+digest_names! {
+    md5::Md5 => "md5",
+    sha1::Sha1 => "sha1",
+    sha2::Sha224 => "sha224",
+    sha2::Sha256 => "sha256",
+    sha2::Sha384 => "sha384",
+    sha2::Sha512 => "sha512",
+}
+
+pub(crate) fn create_hash_fn<T: NamedDigest + Clone + UnwindSafe + RefUnwindSafe + 'static>(
     conn: &Connection,
     fn_name: &str,
 ) -> Result<()> {
-    create_scalar_function(conn, fn_name, hash_fn::<T>)?;
+    create_scalar_function(conn, fn_name, |c| {
+        hash_fn::<T>(
+            c,
+            #[cfg(feature = "trace")]
+            "",
+        )
+        .map(|s| s.finalize())
+    })?;
 
     #[cfg(feature = "hex")]
     {
         let fn_name = format!("{fn_name}_hex");
-        create_scalar_function(conn, &fn_name, |c| to_hex(hash_fn::<T>(c)))?;
+        create_scalar_function(conn, &fn_name, |c| {
+            hash_fn::<T>(
+                c,
+                #[cfg(feature = "trace")]
+                "_hex",
+            )
+            .map(|s| s.finalize_hex())
+        })?;
     }
 
     #[cfg(feature = "aggregate")]
     {
-        use crate::aggregate::AggType;
         let fn_name = format!("{fn_name}_concat");
         create_agg_function(
             conn,
             &fn_name,
-            AggType::<T>::new(
+            crate::aggregate::AggType::<T, Vec<u8>>::new(
                 #[cfg(any(feature = "window", feature = "trace"))]
                 fn_name.clone(),
+                #[cfg(feature = "window")]
+                HashState::calc,
+                HashState::finalize,
             ),
         )?;
     }
 
     #[cfg(all(feature = "aggregate", feature = "hex"))]
     {
-        use crate::aggregate::AggHexType;
         let fn_name = format!("{fn_name}_concat_hex");
         create_agg_function(
             conn,
             &fn_name,
-            AggHexType::<T>::new(
+            crate::aggregate::AggType::<T, String>::new(
                 #[cfg(any(feature = "window", feature = "trace"))]
                 fn_name.clone(),
+                #[cfg(feature = "window")]
+                HashState::calc_hex,
+                HashState::finalize_hex,
             ),
         )?;
     }
@@ -79,44 +122,43 @@ where
     )
 }
 
-fn hash_fn<T: Digest + Clone + UnwindSafe + RefUnwindSafe + 'static>(
+fn hash_fn<T: NamedDigest + Clone + UnwindSafe + RefUnwindSafe + 'static>(
     ctx: &Context,
-) -> Result<Option<Vec<u8>>> {
+    #[cfg(feature = "trace")] suffix: &'static str,
+) -> Result<HashState<T>> {
     let param_count = ctx.len();
     if param_count == 0 {
         return Err(InvalidParameterCount(param_count, 1));
     }
-    let mut digest = T::new();
-    let mut has_vals = false;
+    let mut state = HashState::<T>::default();
     for idx in 0..param_count {
         let value = ctx.get_raw(idx);
         match value {
             ValueRef::Blob(val) => {
-                trace!("hashing blob arg{idx}={val:?}");
-                digest.update(val);
-                has_vals = true;
+                trace!("{}{suffix}: hashing blob arg{idx}={val:?}", T::name());
+                state.add_value(val);
             }
             ValueRef::Text(val) => {
-                trace!("hashing text arg{idx}={val:?}");
-                digest.update(val);
-                has_vals = true;
+                trace!("{}{suffix}: hashing text arg{idx}={val:?}", T::name());
+                state.add_value(val);
             }
             ValueRef::Null => {
-                trace!("ignoring NULL");
+                trace!("{}{suffix}: ignoring arg{idx}=NULL", T::name());
+                state.add_null();
             }
-            ValueRef::Integer(_) => Err(InvalidFunctionParameterType(0, Type::Integer))?,
-            ValueRef::Real(_) => Err(InvalidFunctionParameterType(0, Type::Real))?,
+            ValueRef::Integer(_val) => {
+                trace!(
+                    "{}{suffix}: unsupported Integer arg{idx}={_val:?}",
+                    T::name()
+                );
+                Err(InvalidFunctionParameterType(0, Type::Integer))?
+            }
+            ValueRef::Real(_val) => {
+                trace!("{}{suffix}: unsupported Real arg{idx}={_val:?}", T::name());
+                Err(InvalidFunctionParameterType(0, Type::Real))?
+            }
         }
     }
-    Ok(if has_vals {
-        Some(digest.finalize().to_vec())
-    } else {
-        None
-    })
-}
 
-/// Convert a `Result<Option<Vec<u8>>>` to a `Result<Option<String>>` in upper case, same as SQLite `hex()` function.
-#[cfg(feature = "hex")]
-pub fn to_hex(value: Result<Option<Vec<u8>>>) -> Result<Option<String>> {
-    value.map(|v| v.map(|v| v.encode_hex_upper()))
+    Ok(state)
 }

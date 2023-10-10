@@ -14,14 +14,15 @@ fn init() {
 fn window() {
     let c = Conn::new();
 
-    test_all!(c.window_one(*_concat), blob("aaabbbccc"));
-
+    test_all!(c.window_text_one(*_concat), blob("aaabbbccc"));
     test_all!(
-        c.growing_seq(*_concat),
+        c.growing_text_seq(*_concat),
         blob[vec!["aaa", "aaabbb", "aaabbbccc"]]
     );
 
     test_all!(c.window_err(*_concat), ERROR);
+
+    test_all!(c.window_text_zero(*_concat), NO_ROWS);
 }
 
 #[test]
@@ -29,10 +30,12 @@ fn window() {
 fn window_hex() {
     let c = Conn::new();
 
-    test_all!(c.window_one(*_concat_hex), hex("aaabbbccc"));
+    test_all!(c.window_text_one(*_concat_hex), hex("aaabbbccc"));
 
     test_all!(
-        c.growing_seq(*_concat_hex),
+        c.growing_text_seq(*_concat_hex),
         hex[vec!["aaa", "aaabbb", "aaabbbccc"]]
     );
+
+    test_all!(c.window_text_zero(*_concat_hex), NO_ROWS);
 }
