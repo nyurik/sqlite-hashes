@@ -58,9 +58,17 @@ macro_rules! hash_macros {
                     let actual: rusqlite::Result<Option<Vec<u8>>> = $actual;
                     assert_eq!(actual, Ok(None), "asserting NULL result");
                 }};
+                ( $actual:expr, EMPTY ) => {{
+                    let actual: rusqlite::Result<Option<String>> = $actual;
+                    assert_eq!(actual, Ok(Some(String::from(""))), "asserting EMPTY result");
+                }};
                 ( $actual:expr, ERROR ) => {{
                     let actual: rusqlite::Result<Vec<u8>, rusqlite::Error> = $actual;
                     assert!(actual.is_err(), "asserting error result");
+                }};
+                ( $actual:expr, NO_ROWS ) => {{
+                    let actual: rusqlite::Result<Vec<Vec<u8>>> = $actual;
+                    assert!(actual.unwrap().is_empty(), "asserting NO_ROWS result");
                 }};
                 ( $actual:expr, blob[ $vec:expr ] ) => {{
                     let actual: rusqlite::Result<Vec<Vec<u8>>> = $actual;
@@ -136,8 +144,11 @@ impl Conn {
         sqlite_hashes::register_hash_functions(&db).unwrap();
         db.execute_batch(
             "
-CREATE TABLE tbl(id INTEGER PRIMARY KEY, v TEXT);
-INSERT INTO tbl VALUES (1, 'bbb'), (2, 'ccc'), (3, 'aaa');
+CREATE TABLE tbl(id INTEGER PRIMARY KEY, v_text TEXT, v_blob BLOB, v_null_text TEXT, v_null_blob BLOB);
+INSERT INTO tbl VALUES
+        (1, 'bbb', cast('bbb' as BLOB), cast(NULL as TEXT), cast(NULL as BLOB)),
+        (2, 'ccc', cast('ccc' as BLOB), cast(NULL as TEXT), cast(NULL as BLOB)),
+        (3, 'aaa', cast('aaa' as BLOB), cast(NULL as TEXT), cast(NULL as BLOB));
 ",
         )
         .unwrap();
@@ -159,31 +170,58 @@ INSERT INTO tbl VALUES (1, 'bbb'), (2, 'ccc'), (3, 'aaa');
         self.sql(&format!("SELECT {func}"))
     }
 
-    pub fn window_one<T: FromSql>(&self, func: &str) -> Result<T> {
-        let sql = format!("SELECT {func}(v) OVER (ORDER BY v ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING) FROM tbl LIMIT 1");
+    pub fn window_text_one<T: FromSql>(&self, func: &str) -> Result<T> {
+        let sql = format!("SELECT {func}(v_text) OVER (ORDER BY v_text ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING) FROM tbl LIMIT 1");
         self.sql(&sql)
     }
 
+    pub fn window_text_zero<T: FromSql>(&self, func: &str) -> Result<Vec<T>> {
+        let sql = format!("SELECT {func}(v_text) OVER (ORDER BY v_text ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING) FROM tbl WHERE FALSE");
+        self.list(&sql)
+    }
+
     /// Should return hashes of `[aaa, aaabbb, aaabbbccc]`.
-    pub fn growing_seq<T: FromSql>(&self, func: &str) -> Result<Vec<T>> {
-        let sql = format!("SELECT {func}(v) OVER (ORDER BY v) FROM tbl");
+    pub fn growing_text_seq<T: FromSql>(&self, func: &str) -> Result<Vec<T>> {
+        let sql = format!("SELECT {func}(v_text) OVER (ORDER BY v_text) FROM tbl");
         self.list(&sql)
     }
 
     /// This query moves the beginning of the window forward, so hash funcs will fail
     pub fn window_err<T: FromSql>(&self, func: &str) -> Result<Vec<T>> {
-        let sql = format!("SELECT {func}(v) OVER (ORDER BY v ROWS 1 PRECEDING) FROM tbl");
+        let sql = format!("SELECT {func}(v_text) OVER (ORDER BY v_text ROWS 1 PRECEDING) FROM tbl");
         self.list(&sql)
     }
 
     /// The ordering here is un-documented and may change in the future.
-    pub fn legacy_aggregate<T: FromSql>(&self, hash: &str) -> Result<T> {
-        let sql = format!("SELECT {hash}(v) FROM (SELECT v FROM tbl ORDER BY v)");
+    pub fn legacy_text_aggregate<T: FromSql>(&self, hash: &str) -> Result<T> {
+        let sql = format!("SELECT {hash}(v_text) FROM (SELECT v_text FROM tbl ORDER BY v_text)");
+        self.sql(&sql)
+    }
+
+    /// The ordering here is un-documented and may change in the future.
+    pub fn legacy_blob_aggregate<T: FromSql>(&self, hash: &str) -> Result<T> {
+        let sql = format!("SELECT {hash}(v_blob) FROM (SELECT v_blob FROM tbl ORDER BY v_text)");
+        self.sql(&sql)
+    }
+
+    /// The ordering here is un-documented and may change in the future.
+    pub fn legacy_null_text_aggregate<T: FromSql>(&self, hash: &str) -> Result<T> {
+        let sql = format!(
+            "SELECT {hash}(v_null_text) FROM (SELECT v_null_text FROM tbl ORDER BY v_text)"
+        );
+        self.sql(&sql)
+    }
+
+    /// The ordering here is un-documented and may change in the future.
+    pub fn legacy_null_blob_aggregate<T: FromSql>(&self, hash: &str) -> Result<T> {
+        let sql = format!(
+            "SELECT {hash}(v_null_blob) FROM (SELECT v_null_blob FROM tbl ORDER BY v_text)"
+        );
         self.sql(&sql)
     }
 
     /// Use RECURSIVE CTE to generate a sequence of numbers from 1 to `iterations`,
-    pub fn sequence<T: FromSql>(&self, hash: &str, iterations: usize) -> Result<T> {
+    pub fn sequence<T: FromSql>(&self, expr: &str, iterations: usize) -> Result<T> {
         // Modeled after https://stackoverflow.com/a/26241151/177275
         let sql = format!(
             "
@@ -194,20 +232,20 @@ WITH RECURSIVE
      SELECT v + 1 FROM seq
      LIMIT {iterations}
   )
-SELECT {hash} FROM seq"
+SELECT {expr} FROM seq"
         );
         self.sql(&sql)
     }
 
-    pub fn seq_0<T: FromSql>(&self, hash: &str) -> Result<T> {
-        self.sequence(hash, 0)
+    pub fn seq_0<T: FromSql>(&self, expr: &str) -> Result<T> {
+        self.sequence(expr, 0)
     }
 
-    pub fn seq_1<T: FromSql>(&self, hash: &str) -> Result<T> {
-        self.sequence(hash, 1)
+    pub fn seq_1<T: FromSql>(&self, expr: &str) -> Result<T> {
+        self.sequence(expr, 1)
     }
 
-    pub fn seq_1000<T: FromSql>(&self, hash: &str) -> Result<T> {
-        self.sequence(hash, 1000)
+    pub fn seq_1000<T: FromSql>(&self, expr: &str) -> Result<T> {
+        self.sequence(expr, 1000)
     }
 }

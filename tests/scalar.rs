@@ -41,8 +41,8 @@ fn simple() {
 #[cfg(feature = "hex")]
 fn simple_hex() {
     let c = Conn::new();
-    test_all!(c.select("_hex(NULL)"), NULL);
-    test_all!(c.select("_hex(NULL, NULL, NULL)"), NULL);
+    test_all!(c.select("_hex(NULL)"), EMPTY);
+    test_all!(c.select("_hex(NULL, NULL, NULL)"), EMPTY);
     test_all!(c.select("_hex(1)"), ERROR);
     test_all!(c.select("_hex(0.42)"), ERROR);
     test_all!(c.select("_hex()"), ERROR);

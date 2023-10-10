@@ -17,9 +17,9 @@ pub use rusqlite;
 
 use crate::rusqlite::{Connection, Result};
 
-#[cfg(feature = "aggregate")]
 mod aggregate;
 mod scalar;
+mod state;
 
 #[cfg(feature = "md5")]
 mod md5;
