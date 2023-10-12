@@ -1,4 +1,5 @@
 #![cfg_attr(feature = "default", doc = include_str!("../README.md"))]
+#![forbid(unsafe_code)]
 
 #[cfg(not(any(
     feature = "md5",
