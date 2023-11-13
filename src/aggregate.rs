@@ -142,7 +142,7 @@ impl<T: Digest + Clone + UnwindSafe + RefUnwindSafe, R: ToSql> Aggregate<HashSta
 impl<T: Digest + Clone + UnwindSafe + RefUnwindSafe, R: ToSql>
     WindowAggregate<HashState<T>, Option<R>> for AggType<T, R>
 {
-    fn value(&self, agg: Option<&HashState<T>>) -> Result<Option<R>> {
+    fn value(&self, agg: Option<&mut HashState<T>>) -> Result<Option<R>> {
         trace!("{}: WindowAggregate::value", self.fn_name);
         Ok(agg.and_then(|v| (self.to_value)(v)))
     }
