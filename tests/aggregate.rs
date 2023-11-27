@@ -4,6 +4,7 @@
 #[path = "_utils.rs"]
 mod utils;
 use crate::utils::Conn;
+use std::fmt::Write as _;
 
 #[ctor::ctor]
 fn init() {
@@ -97,17 +98,14 @@ fn concat_sequence() {
         blob("12")
     );
 
-    let expected = (1..=1000)
-        .map(|i| i.to_string())
-        .collect::<Vec<String>>()
-        .join("");
+    let expected = (1..=1000).map(|i| i.to_string()).collect::<String>();
     test_all!(c.seq_1000("_concat(cast(v as text))"), blob(expected));
     test_all!(c.seq_1000("_concat(cast(v as blob))"), blob(expected));
 
-    let expected = (1..=1000)
-        .map(|i| format!("{}{}", i, i + 1))
-        .collect::<Vec<String>>()
-        .join("");
+    let expected = (1..=1000).fold(String::new(), |mut output, i| {
+        let _ = write!(output, "{i}{}", i + 1);
+        output
+    });
     test_all!(
         c.seq_1000("_concat(null, cast(v as text), cast((v+1) as blob), null)"),
         blob(expected)
@@ -132,17 +130,14 @@ fn concat_sequence_hex() {
         hex("12")
     );
 
-    let expected = (1..=1000)
-        .map(|i| i.to_string())
-        .collect::<Vec<String>>()
-        .join("");
+    let expected = (1..=1000).map(|i| i.to_string()).collect::<String>();
     test_all!(c.seq_1000("_concat_hex(cast(v as text))"), hex(expected));
     test_all!(c.seq_1000("_concat_hex(cast(v as blob))"), hex(expected));
 
-    let expected = (1..=1000)
-        .map(|i| format!("{}{}", i, i + 1))
-        .collect::<Vec<String>>()
-        .join("");
+    let expected = (1..=1000).fold(String::new(), |mut output, i| {
+        let _ = write!(output, "{i}{}", i + 1);
+        output
+    });
     test_all!(
         c.seq_1000("_concat_hex(null, cast(v as text), cast((v+1) as blob), null)"),
         hex(expected)

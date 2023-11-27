@@ -72,7 +72,7 @@ pub struct AggType<D, R> {
 
 impl<D: Digest + Clone + UnwindSafe + RefUnwindSafe, R> AggType<D, R> {
     pub fn new(
-        #[cfg(any(feature = "window", feature = "trace"))] fn_name: String,
+        #[cfg(any(feature = "window", feature = "trace"))] fn_name: &str,
         #[cfg(feature = "window")] to_value: fn(&HashState<D>) -> Option<R>,
         to_final: fn(HashState<D>) -> Option<R>,
     ) -> Self {

@@ -55,7 +55,7 @@ pub(crate) fn create_hash_fn<T: NamedDigest + Clone + UnwindSafe + RefUnwindSafe
             #[cfg(feature = "trace")]
             "",
         )
-        .map(|s| s.finalize())
+        .map(HashState::finalize)
     })?;
 
     #[cfg(feature = "hex")]
@@ -67,7 +67,7 @@ pub(crate) fn create_hash_fn<T: NamedDigest + Clone + UnwindSafe + RefUnwindSafe
                 #[cfg(feature = "trace")]
                 "_hex",
             )
-            .map(|s| s.finalize_hex())
+            .map(HashState::finalize_hex)
         })?;
     }
 
@@ -79,7 +79,7 @@ pub(crate) fn create_hash_fn<T: NamedDigest + Clone + UnwindSafe + RefUnwindSafe
             &fn_name,
             crate::aggregate::AggType::<T, Vec<u8>>::new(
                 #[cfg(any(feature = "window", feature = "trace"))]
-                fn_name.clone(),
+                &fn_name,
                 #[cfg(feature = "window")]
                 HashState::calc,
                 HashState::finalize,
@@ -95,7 +95,7 @@ pub(crate) fn create_hash_fn<T: NamedDigest + Clone + UnwindSafe + RefUnwindSafe
             &fn_name,
             crate::aggregate::AggType::<T, String>::new(
                 #[cfg(any(feature = "window", feature = "trace"))]
-                fn_name.clone(),
+                &fn_name,
                 #[cfg(feature = "window")]
                 HashState::calc_hex,
                 HashState::finalize_hex,
@@ -146,16 +146,18 @@ fn hash_fn<T: NamedDigest + Clone + UnwindSafe + RefUnwindSafe + 'static>(
                 trace!("{}{suffix}: ignoring arg{idx}=NULL", T::name());
                 state.add_null();
             }
-            ValueRef::Integer(_val) => {
+            #[allow(unused_variables)]
+            ValueRef::Integer(val) => {
                 trace!(
-                    "{}{suffix}: unsupported Integer arg{idx}={_val:?}",
+                    "{}{suffix}: unsupported Integer arg{idx}={val:?}",
                     T::name()
                 );
-                Err(InvalidFunctionParameterType(0, Type::Integer))?
+                Err(InvalidFunctionParameterType(0, Type::Integer))?;
             }
-            ValueRef::Real(_val) => {
-                trace!("{}{suffix}: unsupported Real arg{idx}={_val:?}", T::name());
-                Err(InvalidFunctionParameterType(0, Type::Real))?
+            #[allow(unused_variables)]
+            ValueRef::Real(val) => {
+                trace!("{}{suffix}: unsupported Real arg{idx}={val:?}", T::name());
+                Err(InvalidFunctionParameterType(0, Type::Real))?;
             }
         }
     }

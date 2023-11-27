@@ -1,11 +1,18 @@
 #![allow(dead_code, unused_macros)]
+#![allow(
+    clippy::missing_panics_doc,
+    clippy::must_use_candidate,
+    clippy::new_without_default
+)]
 
 use digest::Digest;
 use insta::assert_snapshot;
 use rusqlite::types::FromSql;
 use rusqlite::{Connection, Result};
+use std::fmt::Write as _;
 
 /// Simple hasher function that returns the hex-encoded hash of the input.
+#[must_use]
 pub fn hash<T: Digest>(input: &[u8]) -> Vec<u8> {
     let mut hasher = T::new();
     hasher.update(input);
@@ -13,16 +20,20 @@ pub fn hash<T: Digest>(input: &[u8]) -> Vec<u8> {
 }
 
 /// Simple hasher function that returns the hex-encoded hash of the input.
+#[must_use]
 pub fn hash_hex<T: Digest>(input: &[u8]) -> String {
     // Even though hex crate provides this functionality, its use is optional,
     // so we do it manually here to avoid test dependency on hex.
-    let iter = hash::<T>(input).into_iter();
-    iter.map(|b| format!("{:02X}", b)).collect()
+    hash::<T>(input)
+        .into_iter()
+        .fold(String::new(), |mut output, b| {
+            let _ = write!(output, "{b:02X}");
+            output
+        })
 }
 
 /// Make sure the above hasher function produces the expected values,
 /// and use it for validating the SQL functions.
-#[test]
 fn hasher() {
     #[cfg(feature = "md5")]
     assert_snapshot!(hash_hex::<md5::Md5>("test".as_bytes()), @"098F6BCD4621D373CADE4E832627B4F6");

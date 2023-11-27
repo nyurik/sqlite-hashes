@@ -17,7 +17,7 @@ fn window() {
     test_all!(c.window_text_one(*_concat), blob("aaabbbccc"));
     test_all!(
         c.growing_text_seq(*_concat),
-        blob[vec!["aaa", "aaabbb", "aaabbbccc"]]
+        blob[["aaa", "aaabbb", "aaabbbccc"]]
     );
 
     test_all!(c.window_err(*_concat), ERROR);
@@ -34,7 +34,7 @@ fn window_hex() {
 
     test_all!(
         c.growing_text_seq(*_concat_hex),
-        hex[vec!["aaa", "aaabbb", "aaabbbccc"]]
+        hex[["aaa", "aaabbb", "aaabbbccc"]]
     );
 
     test_all!(c.window_text_zero(*_concat_hex), NO_ROWS);
