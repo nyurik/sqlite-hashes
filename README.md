@@ -15,7 +15,7 @@ This crate uses [rusqlite](https://crates.io/crates/rusqlite) to add user-define
 
 ### Scalar functions
 
-There are two types of scalar functions, the `<hash>(...)` and `<hash>_hex(...)`, e.g. `sha256(...)` and `sha256_hex(...)`. The first one returns a blob, and the second one returns a hex string.  All functions can hash text and blob values, but will raise an error on other types. Functions support any number of arguments, e.g. `sha256(a, b, c, ...)`, hashing them in order. All `NULL` values are ignored. When calling the built-in SQLite `hex(NULL)`, the result is an empty string, so `sha256_hex(NULL)` will return an empty string as well to be consistent.
+There are two types of scalar functions, the `<hash>(...)` and `<hash>_hex(...)`, e.g. `sha256(...)` and `sha256_hex(...)`. The first one returns a blob, and the second one returns a hex string.  All functions can hash text and blob values, but will raise an error on other types like integers and floating point numbers. Functions support any number of arguments, e.g. `sha256(a, b, c, ...)`, hashing them in order. All `NULL` values are ignored. When calling the built-in SQLite `hex(NULL)`, the result is an empty string, so `sha256_hex(NULL)` will return an empty string as well to be consistent.
 
 ```rust
 use sqlite_hashes::{register_hash_functions, rusqlite::Connection};
