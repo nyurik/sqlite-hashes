@@ -103,13 +103,24 @@ fn main() {
 }
 ```
 
-## Features
+## Crate features
 By default, this crate will compile with all features. You can enable just the ones you need to reduce compile time and binary size.
 
 ```toml
 [dependencies]
 sqlite-hashes = { version = "0.5", default-features = false, features = ["hex", "window", "sha256"] }
 ``` 
+
+* **trace** - enable tracing support, logging all function calls and their arguments
+* **hex** - enable hex string functions like `*_hex()` and `*_concat_hex()` (if `aggregate` is enabled)
+* **aggregate** - enable aggregate functions like `*_concat()` and `*_concat_hex()` (if `hex` is enabled)
+* **window** - enable window functions support (implies `aggregate`)
+* **md5** - enable MD5 hash support
+* **sha1** - enable SHA1 hash support
+* **sha224** - enable SHA224 hash support
+* **sha256** - enable SHA256 hash support
+* **sha384** - enable SHA384 hash support
+* **sha512** - enable SHA512 hash support
 
 ## Development
 * This project is easier to develop with [just](https://github.com/casey/just#readme), a modern alternative to `make`. Install it with `cargo install just`.
