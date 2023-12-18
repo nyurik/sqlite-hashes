@@ -1,4 +1,6 @@
 #![cfg_attr(feature = "default", doc = include_str!("../README.md"))]
+//
+// Unsafe code is required for cdylib, so only use it for this crate
 #![forbid(unsafe_code)]
 
 #[cfg(not(any(
@@ -10,7 +12,7 @@
     feature = "sha512"
 )))]
 compile_error!(
-    "At least one of the features `md5`, `sha1`, `sha224`, `sha256`, `sha384`, or `sha512` must be enabled."
+    "At least one of these features must be enabled: md5,sha1,sha224,sha256,sha384,sha512"
 );
 
 /// Re-export of the [`rusqlite`](https://crates.io/crates/rusqlite) crate to avoid version conflicts.
