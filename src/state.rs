@@ -55,7 +55,7 @@ impl<T: Digest + Clone> HashState<T> {
     pub fn finalize(self) -> Option<Vec<u8>> {
         match self {
             Self::Created | Self::Started => None,
-            Self::HasValues(hasher) => Some(hasher.clone().finalize().to_vec()),
+            Self::HasValues(hasher) => Some(hasher.finalize().to_vec()),
         }
     }
 
