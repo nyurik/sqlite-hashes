@@ -3,8 +3,9 @@
 #[macro_use]
 #[path = "_utils.rs"]
 mod utils;
-use crate::utils::Conn;
 use std::fmt::Write as _;
+
+use crate::utils::Conn;
 
 #[ctor::ctor]
 fn init() {
