@@ -54,22 +54,22 @@ jobs:
       matrix:
         include:
           - target: aarch64-apple-darwin
-            file: libsqlite_compressions.dylib
+            file: libsqlite_hashes.dylib
             download: 'https://www.sqlite.org/2023/sqlite-tools-osx-x64-3440200.zip'
             os: macOS-latest
             sqlite3: ./sqlite3
           - target: x86_64-apple-darwin
-            file: libsqlite_compressions.dylib
+            file: libsqlite_hashes.dylib
             download: 'https://www.sqlite.org/2023/sqlite-tools-osx-x64-3440200.zip'
             os: macOS-latest
             sqlite3: ./sqlite3
           - target: x86_64-pc-windows-msvc
-            file: sqlite_compressions.dll
+            file: sqlite_hashes.dll
             download: 'https://www.sqlite.org/2023/sqlite-tools-win-x64-3440200.zip'
             os: windows-latest
             sqlite3: ./sqlite3.exe
           - target: x86_64-unknown-linux-gnu
-            file: libsqlite_compressions.so
+            file: libsqlite_hashes.so
             os: ubuntu-latest
             sqlite3: sqlite3
     steps:
@@ -127,9 +127,9 @@ jobs:
         run: |
           pushd target/${{ matrix.target }}/release/examples
           if [[ "${{ runner.os }}" == "Windows" ]]; then
-            7z a ../../../files/sqlite-compressions-${{ matrix.target }}.zip ${{ matrix.file }}
+            7z a ../../../files/sqlite-hashes-${{ matrix.target }}.zip ${{ matrix.file }}
           else
-            tar czvf ../../../files/sqlite-compressions-${{ matrix.target }}.tar.gz ${{ matrix.file }}
+            tar czvf ../../../files/sqlite-hashes-${{ matrix.target }}.tar.gz ${{ matrix.file }}
           fi
           popd
           ls -lR target/files
@@ -161,7 +161,7 @@ jobs:
       - name: Package
         run: |
           mkdir -p target/files
-          tar czvf target/files/sqlite-compressions-aarch64-unknown-linux-gnu.tar.gz -C ./target/aarch64-unknown-linux-gnu/release/examples libsqlite_compressions.so
+          tar czvf target/files/sqlite-hashes-aarch64-unknown-linux-gnu.tar.gz -C ./target/aarch64-unknown-linux-gnu/release/examples libsqlite_hashes.so
       - run: ls -lR target/files
       - name: Publish
         if: startsWith(github.ref, 'refs/tags/')

@@ -14,17 +14,13 @@ This crate uses [rusqlite](https://crates.io/crates/rusqlite) to add user-define
 ## Usage
 
 ### Extension
-To use as an extension, load the `sqlite_compressions.so` shared library into SQLite (works with `gzip` and `brotli`).
+To use as an extension, load the `sqlite_hashes.so` shared library into SQLite.
 
 ```bash
 $ sqlite3
-sqlite> .load sqlite_compressions.so
-sqlite> SELECT hex(brotli('Hello world!'));
-8B058048656C6C6F20776F726C642103
-sqlite> SELECT brotli_decode(x'8B058048656C6C6F20776F726C642103');
-Hello world!
-sqlite> SELECT brotli_test(x'8B058048656C6C6F20776F726C642103');
-1
+sqlite> .load sqlite_hashes.so
+sqlite> SELECT md5_hex('Hello world!');
+86FB269D190D2C85F6E0468CECA42A20
 ```
 
 ### Rust library

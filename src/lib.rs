@@ -9,7 +9,7 @@
     feature = "sha224",
     feature = "sha256",
     feature = "sha384",
-    feature = "sha512"
+    feature = "sha512",
 )))]
 compile_error!(
     "At least one of these features must be enabled: md5,sha1,sha224,sha256,sha384,sha512"
