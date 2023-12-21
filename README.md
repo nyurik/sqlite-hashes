@@ -7,11 +7,19 @@
 [![CI build](https://github.com/nyurik/sqlite-hashes/actions/workflows/ci.yml/badge.svg)](https://github.com/nyurik/sqlite-hashes/actions)
 
 
-Use this crate to add various hash functions to SQLite, including MD5, SHA1, SHA224, SHA256, SHA384, SHA512, FNV1a, XXHASH. 
+Implement SQLite hashing functions with aggregation support, including MD5, SHA1, SHA224, SHA256, SHA384, SHA512, FNV1a, XXHASH. Functions are available as a loadable extension, or as a Rust library.
 
-This crate uses [rusqlite](https://crates.io/crates/rusqlite) to add user-defined functions using static linking. Eventually it would be good to build dynamically loadable extension binaries usable from other languages (PRs welcome).
+See also a similar [SQLite-compressions](https://github.com/nyurik/sqlite-compressions) extension for gzip & brotli compressions.
 
 ## Usage
+
+This SQLite extension adds hashing functions like `sha256(...)`, `sha256_hex(...)`, `sha256_concat` and `sha256_concat_hex` for multiple hashing algorithms. The `sha256` and `sha256_concat` function returns a blob value, while the `*_hex` return a HEX string similar to SQLite's own `hex()` function.
+
+Functions support any number of arguments, e.g. `sha256('foo', 'bar', 'baz')`, hashing them in order as if they were concatenated. Functions can hash text and blob values, but will raise an error on other types like integers and floating point numbers. All `NULL` values are ignored. When calling the built-in SQLite `hex(NULL)`, the result is an empty string, so `sha256_hex(NULL)` will return an empty string as well to be consistent.
+
+The `*_concat` functions support aggregate to compute combined hash over a set of values like a column in a table, e.g. `sha256_concat` and `sha256_concat_hex`. Just like scalar functions, multiple arguments are also supported, so you can compute a hash over a set of columns, e.g. `sha256_concat(col1, col2, col3)`.
+
+**Note:** The window functionality is not supported in the loadable extension, only when used as as a Rust crate. PRs welcome.
 
 ### Extension
 To use as an extension, load the `libsqlite_hashes.so` shared library into SQLite.
@@ -24,8 +32,7 @@ sqlite> SELECT md5_hex('Hello world!');
 ```
 
 ### Rust library
-
-There are two types of scalar functions, the `<hash>(...)` and `<hash>_hex(...)`, e.g. `sha256(...)` and `sha256_hex(...)`. The first one returns a blob, and the second one returns a hex string.  All functions can hash text and blob values, but will raise an error on other types like integers and floating point numbers. Functions support any number of arguments, e.g. `sha256(a, b, c, ...)`, hashing them in order. All `NULL` values are ignored. When calling the built-in SQLite `hex(NULL)`, the result is an empty string, so `sha256_hex(NULL)` will return an empty string as well to be consistent.
+To use as a Rust library, add `sqlite-hashes` to your `Cargo.toml` dependencies.  Then, register the needed functions with `register_hash_functions(&db)`.  This will register all available functions, or you can use `register_gzip_functions(&db)` or `register_brotli_functions(&db)` to register just the needed ones (you may also disable the default features to reduce compile time and binary size).
 
 ```rust
 use sqlite_hashes::{register_hash_functions, rusqlite::Connection};
@@ -133,6 +140,8 @@ sqlite-hashes = { version = "0.6", default-features = false, features = ["hex", 
 * **sha512** - enable SHA512 hash support
 * **fnv** - enable fnv1a hash support
 * **xxhash** - enable xxh32, xxh64, xxh3_64, xxh3_128 hash support
+
+The **loadable_extension** feature should only be used when building a `.so` / `.dylib` / `.dll` extension file that can be loaded directly into sqlite3 executable.
 
 ## Development
 * This project is easier to develop with [just](https://github.com/casey/just#readme), a modern alternative to `make`. Install it with `cargo install just`.
