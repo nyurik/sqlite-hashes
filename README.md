@@ -14,11 +14,11 @@ This crate uses [rusqlite](https://crates.io/crates/rusqlite) to add user-define
 ## Usage
 
 ### Extension
-To use as an extension, load the `sqlite_hashes.so` shared library into SQLite.
+To use as an extension, load the `libsqlite_hashes.so` shared library into SQLite.
 
 ```bash
 $ sqlite3
-sqlite> .load sqlite_hashes.so
+sqlite> .load ./libsqlite_hashes
 sqlite> SELECT md5_hex('Hello world!');
 86FB269D190D2C85F6E0468CECA42A20
 ```
