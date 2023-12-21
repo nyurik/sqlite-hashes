@@ -7,7 +7,7 @@
 [![CI build](https://github.com/nyurik/sqlite-hashes/actions/workflows/ci.yml/badge.svg)](https://github.com/nyurik/sqlite-hashes/actions)
 
 
-Use this crate to add various hash functions to SQLite, including MD5, SHA1, SHA224, SHA256, SHA384, and SHA512. 
+Use this crate to add various hash functions to SQLite, including MD5, SHA1, SHA224, SHA256, SHA384, SHA512, FNV1a, XXHASH. 
 
 This crate uses [rusqlite](https://crates.io/crates/rusqlite) to add user-defined functions using static linking. Eventually it would be good to build dynamically loadable extension binaries usable from other languages (PRs welcome).
 
@@ -131,6 +131,8 @@ sqlite-hashes = { version = "0.6", default-features = false, features = ["hex", 
 * **sha256** - enable SHA256 hash support
 * **sha384** - enable SHA384 hash support
 * **sha512** - enable SHA512 hash support
+* **fnv** - enable fnv1a hash support
+* **xxhash** - enable xxh32, xxh64, xxh3_64, xxh3_128 hash support
 
 ## Development
 * This project is easier to develop with [just](https://github.com/casey/just#readme), a modern alternative to `make`. Install it with `cargo install just`.

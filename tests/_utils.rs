@@ -48,6 +48,15 @@ fn hasher() {
     assert_snapshot!(hash_hex::<sha2::Sha384>("test".as_bytes()), @"768412320F7B0AA5812FCE428DC4706B3CAE50E02A64CAA16A782249BFE8EFC4B7EF1CCB126255D196047DFEDF17A0A9");
     #[cfg(feature = "sha512")]
     assert_snapshot!(hash_hex::<sha2::Sha512>("test".as_bytes()), @"EE26B0DD4AF7E749AA1A8EE3C10AE9923F618980772E473F8819A5D4940E0DB27AC185F8A0E1D5F84F88BC887FD67B143732C304CC5FA9AD8E6F57F50028A8FF");
+    #[cfg(feature = "fnv")]
+    assert_snapshot!(hash_hex::<noncrypto_digests::Fnv>("test".as_bytes()), @"EE26B0DD4AF7E749AA1A8EE3C10AE9923F618980772E473F8819A5D4940E0DB27AC185F8A0E1D5F84F88BC887FD67B143732C304CC5FA9AD8E6F57F50028A8FF");
+    #[cfg(feature = "xxhash")]
+    {
+        assert_snapshot!(hash_hex::<noncrypto_digests::Xxh32>("test".as_bytes()), @"EE26B0DD4AF7E749AA1A8EE3C10AE9923F618980772E473F8819A5D4940E0DB27AC185F8A0E1D5F84F88BC887FD67B143732C304CC5FA9AD8E6F57F50028A8FF");
+        assert_snapshot!(hash_hex::<noncrypto_digests::Xxh64>("test".as_bytes()), @"EE26B0DD4AF7E749AA1A8EE3C10AE9923F618980772E473F8819A5D4940E0DB27AC185F8A0E1D5F84F88BC887FD67B143732C304CC5FA9AD8E6F57F50028A8FF");
+        assert_snapshot!(hash_hex::<noncrypto_digests::Xxh3_64>("test".as_bytes()), @"EE26B0DD4AF7E749AA1A8EE3C10AE9923F618980772E473F8819A5D4940E0DB27AC185F8A0E1D5F84F88BC887FD67B143732C304CC5FA9AD8E6F57F50028A8FF");
+        assert_snapshot!(hash_hex::<noncrypto_digests::Xxh3_128>("test".as_bytes()), @"EE26B0DD4AF7E749AA1A8EE3C10AE9923F618980772E473F8819A5D4940E0DB27AC185F8A0E1D5F84F88BC887FD67B143732C304CC5FA9AD8E6F57F50028A8FF");
+    }
 }
 
 /// Create macros like `md5!` asserting that first expression equals to the hash of the second one.
@@ -130,6 +139,11 @@ hash_macros!(
     "sha256" sha256 sha2::Sha256,
     "sha384" sha384 sha2::Sha384,
     "sha512" sha512 sha2::Sha512,
+    "fnv" fnv1a noncrypto_digests::Fnv,
+    "xxhash" xxh32 noncrypto_digests::Xxh32,
+    "xxhash" xxh64 noncrypto_digests::Xxh64,
+    "xxhash" xxh3_64 noncrypto_digests::Xxh3_64,
+    "xxhash" xxh3_128 noncrypto_digests::Xxh3_128,
 );
 
 macro_rules! test_all {
@@ -145,6 +159,11 @@ macro_rules! test_all {
         sha256!( $conn.$func(&format!("sha256{suffix}")), $($any)* );
         sha384!( $conn.$func(&format!("sha384{suffix}")), $($any)* );
         sha512!( $conn.$func(&format!("sha512{suffix}")), $($any)* );
+        fnv1a!( $conn.$func(&format!("fnv1a{suffix}")), $($any)* );
+        xxh32!( $conn.$func(&format!("xxh32{suffix}")), $($any)* );
+        xxh64!( $conn.$func(&format!("xxh64{suffix}")), $($any)* );
+        xxh3_64!( $conn.$func(&format!("xxh3_64{suffix}")), $($any)* );
+        xxh3_128!( $conn.$func(&format!("xxh3_128{suffix}")), $($any)* );
     }};
 }
 
