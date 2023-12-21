@@ -5,11 +5,12 @@
     clippy::new_without_default
 )]
 
+use std::fmt::Write as _;
+
 use digest::Digest;
 use insta::assert_snapshot;
 use rusqlite::types::FromSql;
 use rusqlite::{Connection, Result};
-use std::fmt::Write as _;
 
 /// Simple hasher function that returns the hex-encoded hash of the input.
 #[must_use]

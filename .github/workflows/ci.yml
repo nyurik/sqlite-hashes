@@ -9,21 +9,33 @@ on:
     types: [published]
   workflow_dispatch:
 
+defaults:
+  run:
+    shell: bash
+
 jobs:
-  build:
-    name: Build
+  test:
+    name: Test
     runs-on: ubuntu-latest
     steps:
+      - uses: taiki-e/install-action@v2
+        with:
+          tool: just
       - uses: actions/checkout@v4
       - uses: Swatinem/rust-cache@v2
-      - run: source .cargo-husky/hooks/pre-push
+        if: github.event_name != 'release' && github.event_name != 'workflow_dispatch'
+      - run: just test
 
   msrv:
-    name: Build with MSRV
+    name: Test MSRV
     runs-on: ubuntu-latest
     steps:
+      - uses: taiki-e/install-action@v2
+        with:
+          tool: just
       - uses: actions/checkout@v4
       - uses: Swatinem/rust-cache@v2
+        if: github.event_name != 'release' && github.event_name != 'workflow_dispatch'
       - name: Read crate metadata
         id: metadata
         run: echo "rust-version=$(sed -ne 's/rust-version *= *\"\(.*\)\"/\1/p' Cargo.toml)" >> $GITHUB_OUTPUT
@@ -31,4 +43,131 @@ jobs:
         uses: dtolnay/rust-toolchain@stable
         with:
           toolchain: ${{ steps.metadata.outputs.rust-version }}
-      - run: cargo test
+          components: clippy,rustfmt
+      - run: just test
+
+  build:
+    name: Build ${{ matrix.target }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - target: aarch64-apple-darwin
+            file: libsqlite_hashes.dylib
+            download: 'https://www.sqlite.org/2023/sqlite-tools-osx-x64-3440200.zip'
+            os: macOS-latest
+            sqlite3: ./sqlite3
+          - target: x86_64-apple-darwin
+            file: libsqlite_hashes.dylib
+            download: 'https://www.sqlite.org/2023/sqlite-tools-osx-x64-3440200.zip'
+            os: macOS-latest
+            sqlite3: ./sqlite3
+          - target: x86_64-pc-windows-msvc
+            file: sqlite_hashes.dll
+            download: 'https://www.sqlite.org/2023/sqlite-tools-win-x64-3440200.zip'
+            os: windows-latest
+            sqlite3: ./sqlite3.exe
+          - target: x86_64-unknown-linux-gnu
+            file: libsqlite_hashes.so
+            os: ubuntu-latest
+            sqlite3: sqlite3
+    steps:
+      - uses: taiki-e/install-action@v2
+        with:
+          tool: just
+      - uses: actions/checkout@v4
+      - uses: Swatinem/rust-cache@v2
+        if: github.event_name != 'release' && github.event_name != 'workflow_dispatch'
+      - name: Download SQLite
+        if: matrix.download
+        uses: carlosperate/download-file-action@v2
+        with:
+          file-url: '${{ matrix.download }}'
+          file-name: sqlite.zip
+          location: ./tmp-downloads
+      - name: Install SQLite
+        if: matrix.download
+        run: |
+          cd tmp-downloads
+          if [[ "${{ runner.os }}" == "Windows" ]]; then
+            7z x sqlite.zip
+          else
+            unzip sqlite.zip
+            chmod +x ${{ matrix.sqlite3 }}
+          fi
+          mv ${{ matrix.sqlite3 }} ../
+          cd ..
+          rm -rf ./tmp-downloads
+      - name: SQLite Info
+        run: |
+          which ${{ matrix.sqlite3 }}
+          ${{ matrix.sqlite3 }} --version
+          ${{ matrix.sqlite3 }} <<EOF
+          .help
+          EOF
+      - name: Build
+        if: matrix.cross != 'true'
+        run: |
+          set -x
+          rustup target add "${{ matrix.target }}"
+          export RUSTFLAGS='-C strip=debuginfo'
+          just build-ext --release --target ${{ matrix.target }}
+          mkdir -p target/files
+      - name: Test ${{ matrix.target }} extension
+        if: matrix.target != 'aarch64-apple-darwin'
+        env:
+          EXTENSION_FILE: target/${{ matrix.target }}/release/examples/${{ matrix.file }}
+          SQLITE3_BIN: ${{ matrix.sqlite3 }}
+        run:  ./tests/test-ext.sh
+#      - name: Test ${{ matrix.target }} extension
+#        if: matrix.target != 'aarch64-apple-darwin'
+#        run: just sqlite3=${{ matrix.sqlite3 }} extension_file=target/${{ matrix.target }}/release/examples/${{ matrix.file }} test-ext
+      - name: Package
+        run: |
+          pushd target/${{ matrix.target }}/release/examples
+          if [[ "${{ runner.os }}" == "Windows" ]]; then
+            7z a ../../../files/sqlite-hashes-${{ matrix.target }}.zip ${{ matrix.file }}
+          else
+            tar czvf ../../../files/sqlite-hashes-${{ matrix.target }}.tar.gz ${{ matrix.file }}
+          fi
+          popd
+          ls -lR target/files
+      - name: Publish
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v1
+        with:
+          draft: true
+          files: 'target/files/*'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  cross-build:
+    name: Cross-build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: taiki-e/install-action@v2
+        with:
+          tool: just,cross
+      - uses: actions/checkout@v4
+      - uses: Swatinem/rust-cache@v2
+        if: github.event_name != 'release' && github.event_name != 'workflow_dispatch'
+      - run: just cross-build-ext-aarch64
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+        with:
+          platforms: linux/arm64
+      - run: just cross-test-ext-aarch64
+      - name: Package
+        run: |
+          mkdir -p target/files
+          tar czvf target/files/sqlite-hashes-aarch64-unknown-linux-gnu.tar.gz -C ./target/aarch64-unknown-linux-gnu/release/examples libsqlite_hashes.so
+      - run: ls -lR target/files
+      - name: Publish
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v1
+        with:
+          draft: true
+          files: 'target/files/*'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

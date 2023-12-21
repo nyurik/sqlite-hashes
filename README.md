@@ -13,7 +13,17 @@ This crate uses [rusqlite](https://crates.io/crates/rusqlite) to add user-define
 
 ## Usage
 
-### Scalar functions
+### Extension
+To use as an extension, load the `sqlite_hashes.so` shared library into SQLite.
+
+```bash
+$ sqlite3
+sqlite> .load sqlite_hashes.so
+sqlite> SELECT md5_hex('Hello world!');
+86FB269D190D2C85F6E0468CECA42A20
+```
+
+### Rust library
 
 There are two types of scalar functions, the `<hash>(...)` and `<hash>_hex(...)`, e.g. `sha256(...)` and `sha256_hex(...)`. The first one returns a blob, and the second one returns a hex string.  All functions can hash text and blob values, but will raise an error on other types like integers and floating point numbers. Functions support any number of arguments, e.g. `sha256(a, b, c, ...)`, hashing them in order. All `NULL` values are ignored. When calling the built-in SQLite `hex(NULL)`, the result is an empty string, so `sha256_hex(NULL)` will return an empty string as well to be consistent.
 
@@ -45,7 +55,7 @@ fn main() {
 ```
 
 ### Aggregate and Window Functions
-When `aggregate` or `window` feature is enabled (default), there are functions to compute combined hash over a set of values like a column in a table, e.g. `sha256_concat` and `sha256_concat_hex`. Just like scalar functions, multiple arguments are also supported, so you can compute a hash over a set of columns, e.g. `sha256_concat(col1, col2, col3)`.
+When `aggregate` or `window` feature is enabled (default), there are functions to compute combined hash over a set of values like a column in a table, e.g. `sha256_concat` and `sha256_concat_hex`. Just like scalar functions, multiple arguments are also supported, so you can compute a hash over a set of columns, e.g. `sha256_concat(col1, col2, col3)`. Note that the window functionality is not supported in the loadable extension.
 
 #### IMPORTANT NOTE: ORDERING
 
@@ -108,7 +118,7 @@ By default, this crate will compile with all features. You can enable just the o
 
 ```toml
 [dependencies]
-sqlite-hashes = { version = "0.5", default-features = false, features = ["hex", "window", "sha256"] }
+sqlite-hashes = { version = "0.6", default-features = false, features = ["hex", "window", "sha256"] }
 ``` 
 
 * **trace** - enable tracing support, logging all function calls and their arguments

@@ -1,4 +1,5 @@
-#!/bin/sh
+#!/usr/bin/env sh
+set -eu
 #
 # See https://github.com/rhysd/cargo-husky#readme
 #
@@ -9,42 +10,4 @@ echo "The following steps are also ran during   git push   command."
 echo "If you want to push your changes without running CI, use   git push --no-verify"
 echo "-------------------------------------------------------------------------------"
 
-set -ex
-
-export RUSTFLAGS='-D warnings'
-
-rustc --version
-cargo --version
-cargo fmt --all -- --check
-cargo build
-cargo test --workspace --all-targets --all-features --bins --tests --lib --benches
-
-{ set +x ;} 2> /dev/null
-for hash in "md5" "sha1" "sha224" "sha256" "sha384" "sha512"; do
-  echo "################################################################################################################################"
-  set -x
-  cargo test --no-default-features --lib --bins --examples --tests --benches --features "trace hex window $hash"
-  { set +x ;} 2> /dev/null
-done
-
-for trace in "" "trace"; do
-  for hex in "" "hex"; do
-    for agg in "" "aggregate" "window"; do
-      echo "################################################################################################################################"
-      set -x
-      cargo test --no-default-features --lib --bins --examples --tests --benches --features "md5 sha1 sha224 sha256 sha384 sha512 $agg $hex $trace"
-      { set +x ;} 2> /dev/null
-    done
-  done
-done
-
-echo "################################################################################################################################"
-set -x
-
-cargo test --doc
-RUSTDOCFLAGS="-D warnings" cargo doc --no-deps
-
-cargo clippy -- -D warnings
-cargo clippy --workspace --all-features --all-targets --bins --tests --lib --benches -- -D warnings
-cargo clippy --features aggregate -- -D warnings
-cargo clippy --features window -- -D warnings
+just test
