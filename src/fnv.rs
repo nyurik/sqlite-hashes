@@ -3,9 +3,7 @@ use noncrypto_digests::Fnv;
 use crate::rusqlite::{Connection, Result};
 
 /// Register the `fnv1a` SQL function with the given `SQLite` connection.
-/// The function takes a single argument and returns the [SHA384 hash](https://en.wikipedia.org/wiki/SHA-2) (blob) of that argument.
-/// The argument can be either a string or a blob.
-/// If the argument is `NULL`, the result is `NULL`.
+/// The `fnv1a` function uses [Fowler–Noll–Vo hash function](https://en.wikipedia.org/wiki/Fowler%E2%80%93Noll%E2%80%93Vo_hash_function#FNV-1a_hash) to compute the hash of the argument(s).
 ///
 /// # Example
 ///

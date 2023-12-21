@@ -3,6 +3,7 @@ use noncrypto_digests::{Xxh32, Xxh3_128, Xxh3_64, Xxh64};
 use crate::rusqlite::{Connection, Result};
 
 /// Register `xxh32`, `xxh64`, `xxh3_64`, `xxh3_128`, `xxh3_64` SQL functions with the given `SQLite` connection.
+/// The functions use [Rust xxhash implementation](https://github.com/DoumanAsh/xxhash-rust) to compute the hash of the argument(s) using zero as the seed value.
 ///
 /// # Example
 ///
