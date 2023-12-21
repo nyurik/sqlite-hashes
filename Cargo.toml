@@ -21,8 +21,10 @@ crate-type = ["cdylib"]
 required-features = ["loadable_extension"]
 
 [features]
-default = ["trace", "aggregate", "hex", "md5", "sha1", "sha224", "sha256", "sha384", "sha512"]
-# Use this feature to build loadable extension with all available features. Assumes --no-default-features
+default = ["trace", "aggregate", "window", "hex", "md5", "sha1", "sha224", "sha256", "sha384", "sha512"]
+# Use this feature to build loadable extension.
+# Assumes --no-default-features.
+# Does not support windowing functionality yet.
 default_loadable_extension = ["loadable_extension", "aggregate", "hex", "md5", "sha1", "sha224", "sha256", "sha384", "sha512"]
 #
 # Enable Trace Logging
