@@ -25,8 +25,15 @@ pub trait NamedDigest: Digest {
 
 macro_rules! digest_names {
     ($($typ:ty => $name:literal),* $(,)?) => {
+        digest_names!(
+            $(
+                $typ => $name @ $name,
+            )*
+        );
+    };
+    ($($typ:ty => $name:literal @ $feature:literal),* $(,)?) => {
         $(
-            #[cfg(feature = $name)]
+            #[cfg(feature = $feature)]
             impl NamedDigest for $typ {
                 fn name() -> &'static str {
                     $name
@@ -43,6 +50,14 @@ digest_names! {
     sha2::Sha256 => "sha256",
     sha2::Sha384 => "sha384",
     sha2::Sha512 => "sha512",
+}
+
+digest_names! {
+    noncrypto_digests::Fnv => "fnv1a" @ "fnv",
+    noncrypto_digests::Xxh32 => "xxh32" @ "xxhash",
+    noncrypto_digests::Xxh64 => "xxh64" @ "xxhash",
+    noncrypto_digests::Xxh3_64 => "xxh3_64" @ "xxhash",
+    noncrypto_digests::Xxh3_128 => "xxh3_128" @ "xxhash",
 }
 
 pub(crate) fn create_hash_fn<T: NamedDigest + Clone + UnwindSafe + RefUnwindSafe + 'static>(
