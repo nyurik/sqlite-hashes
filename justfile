@@ -17,12 +17,12 @@ build-lib:
 build-ext *ARGS:
     # Window is not supported because it requires bundling the SQLite library
     # See https://github.com/rusqlite/rusqlite/discussions/1423
-    cargo  build --example sqlite_hashes --no-default-features --features default_loadable_extension {{ ARGS }}
+    cargo build --example sqlite_hashes --no-default-features --features default_loadable_extension {{ ARGS }}
 
 cross-build-ext *ARGS:
     # Window is not supported because it requires bundling the SQLite library
     # See https://github.com/rusqlite/rusqlite/discussions/1423
-    cross  build --example sqlite_hashes --no-default-features --features default_loadable_extension {{ ARGS }}
+    cross build --example sqlite_hashes --no-default-features --features default_loadable_extension {{ ARGS }}
 
 cross-build-ext-aarch64: (cross-build-ext "--target=aarch64-unknown-linux-gnu" "--release")
 
@@ -43,6 +43,11 @@ clippy:
 # Build and open code documentation
 docs:
     cargo doc --no-deps --open
+
+# Run benchmarks
+bench:
+    cargo bench
+    open target/criterion/report/index.html
 
 # Test documentation
 test-doc:

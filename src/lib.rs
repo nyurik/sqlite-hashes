@@ -23,8 +23,12 @@ pub use rusqlite;
 use crate::rusqlite::{Connection, Result};
 
 mod aggregate;
+
 mod scalar;
+pub use crate::scalar::NamedDigest;
+
 mod state;
+pub use crate::state::HashState;
 
 #[cfg(feature = "md5")]
 mod md5;
