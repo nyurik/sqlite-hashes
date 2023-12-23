@@ -7,7 +7,7 @@
 [![CI build](https://github.com/nyurik/sqlite-hashes/actions/workflows/ci.yml/badge.svg)](https://github.com/nyurik/sqlite-hashes/actions)
 
 
-Implement SQLite hashing functions with aggregation support, including MD5, SHA1, SHA224, SHA256, SHA384, SHA512, FNV1a, XXHASH. Functions are available as a loadable extension, or as a Rust library.
+Implement SQLite hashing functions with aggregation support, including MD5, SHA1, SHA224, SHA256, SHA384, SHA512, FNV-1a, xxHash. Functions are available as a loadable extension, or as a Rust library.
 
 See also a similar [SQLite-compressions](https://github.com/nyurik/sqlite-compressions) extension for gzip & brotli compressions.
 
@@ -138,7 +138,7 @@ sqlite-hashes = { version = "0.6", default-features = false, features = ["hex", 
 * **sha256** - enable SHA256 hash support
 * **sha384** - enable SHA384 hash support
 * **sha512** - enable SHA512 hash support
-* **fnv** - enable fnv1a hash support
+* **fnv** - enable FNV-1a hash support
 * **xxhash** - enable xxh32, xxh64, xxh3_64, xxh3_128 hash support
 
 The **loadable_extension** feature should only be used when building a `.so` / `.dylib` / `.dll` extension file that can be loaded directly into sqlite3 executable.
