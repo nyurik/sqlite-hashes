@@ -9,7 +9,7 @@
 
 Implement SQLite hashing functions with aggregation support, including MD5, SHA1, SHA224, SHA256, SHA384, SHA512, FNV-1a, xxHash. Functions are available as a loadable extension, or as a Rust library.
 
-See also a similar [SQLite-compressions](https://github.com/nyurik/sqlite-compressions) extension for gzip & brotli compressions.
+See also [SQLite-compressions](https://github.com/nyurik/sqlite-compressions) extension for gzip & brotli compressions.
 
 ## Usage
 
