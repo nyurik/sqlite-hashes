@@ -8,7 +8,7 @@ edition = "2021"
 license = "MIT OR Apache-2.0"
 keywords = ["sqlite", "rusqlite", "hash", "md5", "sha256"]
 categories = ["database", "cryptography"]
-rust-version = "1.70.0"
+rust-version = "1.71.1"
 
 [lib]
 name = "sqlite_hashes"
