@@ -136,8 +136,8 @@ bless *ARGS: (cargo-install "insta" "cargo-insta")
 cargo-install $COMMAND $INSTALL_CMD="" *ARGS="":
     #!/usr/bin/env sh
     set -eu
-    if [ ! command -v $COMMAND &> /dev/null ]; then
-        if [ ! command -v cargo-binstall &> /dev/null ]; then
+    if ! command -v $COMMAND &> /dev/null; then
+        if ! command -v cargo-binstall &> /dev/null; then
             echo "$COMMAND could not be found. Installing it with    cargo install ${INSTALL_CMD:-$COMMAND} {{ ARGS }}"
             cargo install ${INSTALL_CMD:-$COMMAND} {{ ARGS }}
         else
