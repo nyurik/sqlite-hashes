@@ -2,11 +2,11 @@ name: CI
 
 on:
   push:
-    branches: [main]
+    branches: [ main ]
   pull_request:
-    branches: [main]
+    branches: [ main ]
   release:
-    types: [published]
+    types: [ published ]
   workflow_dispatch:
 
 defaults:
@@ -19,8 +19,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: taiki-e/install-action@v2
-        with:
-          tool: just
+        with: { tool: just }
       - uses: actions/checkout@v4
       - uses: Swatinem/rust-cache@v2
         if: github.event_name != 'release' && github.event_name != 'workflow_dispatch'
@@ -31,8 +30,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: taiki-e/install-action@v2
-        with:
-          tool: just
+        with: { tool: just }
       - uses: actions/checkout@v4
       - uses: Swatinem/rust-cache@v2
         if: github.event_name != 'release' && github.event_name != 'workflow_dispatch'
@@ -74,8 +72,7 @@ jobs:
             sqlite3: sqlite3
     steps:
       - uses: taiki-e/install-action@v2
-        with:
-          tool: just
+        with: { tool: just }
       - uses: actions/checkout@v4
       - uses: Swatinem/rust-cache@v2
         if: github.event_name != 'release' && github.event_name != 'workflow_dispatch'
@@ -119,7 +116,7 @@ jobs:
         env:
           EXTENSION_FILE: target/${{ matrix.target }}/release/examples/${{ matrix.file }}
           SQLITE3_BIN: ${{ matrix.sqlite3 }}
-        run:  ./tests/test-ext.sh
+        run: ./tests/test-ext.sh
 #      - name: Test ${{ matrix.target }} extension
 #        if: matrix.target != 'aarch64-apple-darwin'
 #        run: just sqlite3=${{ matrix.sqlite3 }} extension_file=target/${{ matrix.target }}/release/examples/${{ matrix.file }} test-ext
