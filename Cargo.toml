@@ -59,7 +59,7 @@ xxhash = ["dep:noncrypto-digests", "noncrypto-digests?/xxh3", "noncrypto-digests
 [dependencies]
 hex = { version = "0.4", optional = true }
 log = { version = "0.4", optional = true }
-rusqlite = { version = "0.30", features = ["functions"] }
+rusqlite = { version = "0.31", features = ["functions"] }
 
 # Digest and all hashing algorithms are using the same crates internally, so should be kept in sync
 digest = "0.10.7"
