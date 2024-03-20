@@ -1,6 +1,6 @@
 [package]
 name = "sqlite-hashes"
-version = "0.6.0"  # This value is also used in the README.md
+version = "0.7.0"  # This value is also used in the README.md
 description = "Hashing functions for SQLite with aggregation support: MD5, SHA1, SHA256, SHA512, FNV-1a, xxHash"
 authors = ["Yuri Astrakhan <YuriAstrakhan@gmail.com>"]
 repository = "https://github.com/nyurik/sqlite-hashes"
@@ -8,7 +8,7 @@ edition = "2021"
 license = "MIT OR Apache-2.0"
 keywords = ["sqlite", "rusqlite", "hash", "md5", "sha256"]
 categories = ["database", "cryptography"]
-rust-version = "1.71.1"
+rust-version = "1.74.0"
 
 [lib]
 name = "sqlite_hashes"

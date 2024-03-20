@@ -34,37 +34,37 @@ pub use crate::state::HashState;
 mod md5;
 
 #[cfg(feature = "md5")]
-pub use crate::md5::register_md5_function;
+pub use crate::md5::register_md5_functions;
 
 #[cfg(feature = "sha1")]
 mod sha1;
 
 #[cfg(feature = "sha1")]
-pub use crate::sha1::register_sha1_function;
+pub use crate::sha1::register_sha1_functions;
 
 #[cfg(feature = "sha224")]
 mod sha224;
 
 #[cfg(feature = "sha224")]
-pub use crate::sha224::register_sha224_function;
+pub use crate::sha224::register_sha224_functions;
 
 #[cfg(feature = "sha256")]
 mod sha256;
 
 #[cfg(feature = "sha256")]
-pub use crate::sha256::register_sha256_function;
+pub use crate::sha256::register_sha256_functions;
 
 #[cfg(feature = "sha384")]
 mod sha384;
 
 #[cfg(feature = "sha384")]
-pub use crate::sha384::register_sha384_function;
+pub use crate::sha384::register_sha384_functions;
 
 #[cfg(feature = "sha512")]
 mod sha512;
 
 #[cfg(feature = "sha512")]
-pub use crate::sha512::register_sha512_function;
+pub use crate::sha512::register_sha512_functions;
 
 #[cfg(feature = "fnv")]
 mod fnv;
@@ -133,17 +133,17 @@ pub use crate::xxhash::register_xxhash_functions;
 /// ```
 pub fn register_hash_functions(conn: &Connection) -> Result<()> {
     #[cfg(feature = "md5")]
-    register_md5_function(conn)?;
+    register_md5_functions(conn)?;
     #[cfg(feature = "sha1")]
-    register_sha1_function(conn)?;
+    register_sha1_functions(conn)?;
     #[cfg(feature = "sha224")]
-    register_sha224_function(conn)?;
+    register_sha224_functions(conn)?;
     #[cfg(feature = "sha256")]
-    register_sha256_function(conn)?;
+    register_sha256_functions(conn)?;
     #[cfg(feature = "sha384")]
-    register_sha384_function(conn)?;
+    register_sha384_functions(conn)?;
     #[cfg(feature = "sha512")]
-    register_sha512_function(conn)?;
+    register_sha512_functions(conn)?;
     #[cfg(feature = "fnv")]
     register_fnv_functions(conn)?;
     #[cfg(feature = "xxhash")]

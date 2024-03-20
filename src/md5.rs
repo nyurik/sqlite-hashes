@@ -12,16 +12,16 @@ use crate::scalar::create_hash_fn;
 ///
 /// ```
 /// # use sqlite_hashes::rusqlite::{Connection, Result};
-/// # use sqlite_hashes::register_md5_function;
+/// # use sqlite_hashes::register_md5_functions;
 /// # fn main() -> Result<()> {
 /// let db = Connection::open_in_memory()?;
-/// register_md5_function(&db)?;
+/// register_md5_functions(&db)?;
 /// let hash: Vec<u8> = db.query_row("SELECT md5('hello')", [], |r| r.get(0))?;
 /// let expected = b"\x5d\x41\x40\x2a\xbc\x4b\x2a\x76\xb9\x71\x9d\x91\x10\x17\xc5\x92";
 /// assert_eq!(hash, expected);
 /// # Ok(())
 /// # }
 /// ```
-pub fn register_md5_function(conn: &Connection) -> Result<()> {
+pub fn register_md5_functions(conn: &Connection) -> Result<()> {
     create_hash_fn::<Md5>(conn, "md5")
 }

@@ -11,16 +11,16 @@ use crate::rusqlite::{Connection, Result};
 ///
 /// ```
 /// # use sqlite_hashes::rusqlite::{Connection, Result};
-/// # use sqlite_hashes::register_sha512_function;
+/// # use sqlite_hashes::register_sha512_functions;
 /// # fn main() -> Result<()> {
 /// let db = Connection::open_in_memory()?;
-/// register_sha512_function(&db)?;
+/// register_sha512_functions(&db)?;
 /// let hash: Vec<u8> = db.query_row("SELECT sha512('hello')", [], |r| r.get(0))?;
 /// let expected = b"\x9b\x71\xd2\x24\xbd\x62\xf3\x78\x5d\x96\xd4\x6a\xd3\xea\x3d\x73\x31\x9b\xfb\xc2\x89\x0c\xaa\xda\xe2\xdf\xf7\x25\x19\x67\x3c\xa7\x23\x23\xc3\xd9\x9b\xa5\xc1\x1d\x7c\x7a\xcc\x6e\x14\xb8\xc5\xda\x0c\x46\x63\x47\x5c\x2e\x5c\x3a\xde\xf4\x6f\x73\xbc\xde\xc0\x43";
 /// assert_eq!(hash, expected);
 /// # Ok(())
 /// # }
 /// ```
-pub fn register_sha512_function(conn: &Connection) -> Result<()> {
+pub fn register_sha512_functions(conn: &Connection) -> Result<()> {
     crate::scalar::create_hash_fn::<Sha512>(conn, "sha512")
 }
