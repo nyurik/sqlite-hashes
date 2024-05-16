@@ -112,7 +112,7 @@ impl<T: Digest + Clone + UnwindSafe + RefUnwindSafe, R: ToSql> Aggregate<HashSta
                         "{}: arg{idx} -> step(text {:?})",
                         self.fn_name,
                         match std::str::from_utf8(val) {
-                            Ok(v) => std::borrow::Cow::from(v),
+                            Ok(v) => Cow::from(v),
                             Err(_) => Cow::from(val.encode_hex_upper::<String>()),
                         }
                     );
