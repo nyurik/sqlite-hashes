@@ -149,6 +149,28 @@ fn main() {
 }
 ```
 
+#### Using with SQLx
+
+To use with [SQLx](https://crates.io/crates/sqlx), you need to get the raw handle from the `SqliteConnection` and pass it to the registration function.
+
+```rust,ignore
+use sqlx::sqlite::SqliteConnection;
+
+async fn register_functions(sqlx_conn: &SqliteConnection) {
+    // SAFETY: No query must be performed on `sqlx_conn` until `handle_lock` is dropped.
+    let mut handle_lock = sqlx_conn.lock_handle().await.unwrap();
+    let handle = handle_lock.as_raw_handle().as_ptr();
+
+    // SAFETY: this is safe as long as handle_lock is valid.
+    let rusqlite_conn = unsafe { Connection::from_handle(handle) }.unwrap();
+
+    // Registration is attached to the connection, not to rusqlite_conn,
+    // so it will be available for the entire lifetime of the `sqlx_conn`.
+    // Registration will be automatically dropped when SqliteConnection is dropped.
+    register_hash_functions(&rusqlite_conn).unwrap();
+}
+```
+
 ## Crate features
 
 By default, this crate will compile with all features. You can enable just the ones you need to reduce compile time and
