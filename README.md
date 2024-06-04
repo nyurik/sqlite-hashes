@@ -154,9 +154,11 @@ fn main() {
 To use with [SQLx](https://crates.io/crates/sqlx), you need to get the raw handle from the `SqliteConnection` and pass it to the registration function.
 
 ```rust,ignore
+use rusqlite::Connection;
+use sqlite_hashes::register_hash_functions;
 use sqlx::sqlite::SqliteConnection;
 
-async fn register_functions(sqlx_conn: &SqliteConnection) {
+async fn register_functions(sqlx_conn: &mut SqliteConnection) {
     // SAFETY: No query must be performed on `sqlx_conn` until `handle_lock` is dropped.
     let mut handle_lock = sqlx_conn.lock_handle().await.unwrap();
     let handle = handle_lock.as_raw_handle().as_ptr();
