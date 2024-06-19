@@ -6,20 +6,20 @@
 [![crates.io version](https://img.shields.io/crates/l/sqlite-hashes.svg)](https://github.com/nyurik/sqlite-hashes/blob/main/LICENSE-APACHE)
 [![CI build](https://github.com/nyurik/sqlite-hashes/actions/workflows/ci.yml/badge.svg)](https://github.com/nyurik/sqlite-hashes/actions)
 
-Implement SQLite hashing functions with aggregation support, including MD5, SHA1, SHA224, SHA256, SHA384, SHA512,
+Implement `SQLite` hashing functions with aggregation support, including MD5, SHA1, SHA224, SHA256, SHA384, SHA512,
 FNV-1a, xxHash. Functions are available as a loadable extension, or as a Rust library.
 
 See also [SQLite-compressions](https://github.com/nyurik/sqlite-compressions) extension for gzip, brotli, and bsdiff support.
 
 ## Usage
 
-This SQLite extension adds hashing functions like `sha256(...)`, `sha256_hex(...)`, `sha256_concat`
+This `SQLite` extension adds hashing functions like `sha256(...)`, `sha256_hex(...)`, `sha256_concat`
 and `sha256_concat_hex` for multiple hashing algorithms. The `sha256` and `sha256_concat` function returns a blob value,
-while the `*_hex` return a HEX string similar to SQLite's own `hex()` function.
+while the `*_hex` return a HEX string similar to `SQLite`'s own `hex()` function.
 
 Functions support any number of arguments, e.g. `sha256('foo', 'bar', 'baz')`, hashing them in order as if they were
 concatenated. Functions can hash text and blob values, but will raise an error on other types like integers and floating
-point numbers. All `NULL` values are ignored. When calling the built-in SQLite `hex(NULL)`, the result is an empty
+point numbers. All `NULL` values are ignored. When calling the built-in `SQLite`'s `hex(NULL)`, the result is an empty
 string, so `sha256_hex(NULL)` will return an empty string as well to be consistent.
 
 The `*_concat` functions support aggregate to compute combined hash over a set of values like a column in a table,
@@ -31,7 +31,7 @@ welcome.
 
 ### Extension
 
-To use as an extension, load the `libsqlite_hashes.so` shared library into SQLite.
+To use as an extension, load the `libsqlite_hashes.so` shared library into `SQLite`.
 
 ```bash
 $ sqlite3
@@ -50,28 +50,26 @@ disable the default features to reduce compile time and binary size).
 ```rust
 use sqlite_hashes::{register_hash_functions, rusqlite::Connection};
 
-fn main() {
-    // Connect to SQLite DB and register needed hashing functions
-    let db = Connection::open_in_memory().unwrap();
-    // can also use hash-specific ones like register_sha256_functions(&db)  
-    register_hash_functions(&db).unwrap();
+// Connect to SQLite DB and register needed hashing functions
+let db = Connection::open_in_memory().unwrap();
+// can also use hash-specific ones like register_sha256_functions(&db)  
+register_hash_functions( & db).unwrap();
 
-    // Hash 'password' using SHA-256, and dump resulting BLOB as a HEX string
-    let sql = "SELECT hex(sha256('password'));";
-    let hash: String = db.query_row_and_then(&sql, [], |r| r.get(0)).unwrap();
-    assert_eq!(hash, "5E884898DA28047151D0E56F8DC6292773603D0D6AABBDD62A11EF721D1542D8");
+// Hash 'password' using SHA-256, and dump resulting BLOB as a HEX string
+let sql = "SELECT hex(sha256('password'));";
+let hash: String = db.query_row_and_then( & sql, [], | r| r.get(0)).unwrap();
+assert_eq!(hash, "5E884898DA28047151D0E56F8DC6292773603D0D6AABBDD62A11EF721D1542D8");
 
-    // Same as above, but use sha256_hex() function to dump the result as a HEX string directly
-    let sql = "SELECT sha256_hex('password');";
-    let hash: String = db.query_row_and_then(&sql, [], |r| r.get(0)).unwrap();
-    assert_eq!(hash, "5E884898DA28047151D0E56F8DC6292773603D0D6AABBDD62A11EF721D1542D8");
+// Same as above, but use sha256_hex() function to dump the result as a HEX string directly
+let sql = "SELECT sha256_hex('password');";
+let hash: String = db.query_row_and_then( & sql, [], | r| r.get(0)).unwrap();
+assert_eq!(hash, "5E884898DA28047151D0E56F8DC6292773603D0D6AABBDD62A11EF721D1542D8");
 
-    // Hash 'pass' (as text) and 'word' (as blob) using SHA-256, and dump it as a HEX string
-    // The result is the same as the above 'password' example.
-    let sql = "SELECT sha256_hex(cast('pass' as text), cast('word' as blob));";
-    let hash: String = db.query_row_and_then(&sql, [], |r| r.get(0)).unwrap();
-    assert_eq!(hash, "5E884898DA28047151D0E56F8DC6292773603D0D6AABBDD62A11EF721D1542D8");
-}
+// Hash 'pass' (as text) and 'word' (as blob) using SHA-256, and dump it as a HEX string
+// The result is the same as the above 'password' example.
+let sql = "SELECT sha256_hex(cast('pass' as text), cast('word' as blob));";
+let hash: String = db.query_row_and_then( & sql, [], | r| r.get(0)).unwrap();
+assert_eq!(hash, "5E884898DA28047151D0E56F8DC6292773603D0D6AABBDD62A11EF721D1542D8");
 ```
 
 ### Aggregate and Window Functions
@@ -83,20 +81,20 @@ Note that the window functionality is not supported in the loadable extension.
 
 #### IMPORTANT NOTE: ORDERING
 
-SQLite does NOT guarantee the order of rows when executing aggregate functions. A
+`SQLite` does NOT guarantee the order of rows when executing aggregate functions. A
 query `SELECT sha256_concat(v) FROM tbl ORDER BY v;` will NOT concatenate values in sorted order, but will use some
 internal storage order instead.
 
-SQLite [v3.44.0](https://www.sqlite.org/changes.html#version_3_44_0)(2023-11-01) added support for the `ORDER BY` clause
+`SQLite` [v3.44.0](https://www.sqlite.org/changes.html#version_3_44_0)(2023-11-01) added support for the `ORDER BY` clause
 **inside** the aggregate function call, e.g. `SELECT sha256_concat(v ORDER BY v) FROM tbl;`. Make sure to use that to
 guarantee consistent results.
 
-For older SQLite versions, one common workaround was to use a subquery,
+For older `SQLite` versions, one common workaround was to use a subquery,
 e.g. `SELECT group_concat(v) FROM (SELECT v FROM tbl ORDER BY v);`. This is
-NOT guaranteed to work in future versions of SQLite. See [discussion](https://sqlite.org/forum/info/a49d9c4083b5350c)
+NOT guaranteed to work in future versions of `SQLite`. See [discussion](https://sqlite.org/forum/info/a49d9c4083b5350c)
 for more details.
 
-Another way for older SQLite to guarantee the ordering is to use a window function.
+Another way for older `SQLite` to guarantee the ordering is to use a window function.
 
 ```sql,ignore
 SELECT sha256_concat_hex(v)
@@ -120,36 +118,34 @@ SELECT coalesce(
        );
 ```
 
-Note that window functions are only available in SQLite 3.25 and later, so a bundled SQLite version must be used, at
+Note that window functions are only available in `SQLite` 3.25 and later, so a bundled `SQLite` version must be used, at
 least for now.
 
 ```rust 
 use sqlite_hashes::{register_hash_functions, rusqlite::Connection};
 
-fn main() {
-    let db = Connection::open_in_memory().unwrap();
-    register_hash_functions(&db).unwrap();
+let db = Connection::open_in_memory().unwrap();
+register_hash_functions( & db).unwrap();
 
-    // Pre-populate the DB with some data. Note that the b values are not alphabetical.
-    db.execute_batch("
+// Pre-populate the DB with some data. Note that the b values are not alphabetical.
+db.execute_batch("
     CREATE TABLE tbl(id INTEGER PRIMARY KEY, v TEXT);
     INSERT INTO tbl VALUES (1, 'bbb'), (2, 'ccc'), (3, 'aaa');
   ").unwrap();
 
-    let sql = "SELECT sha256_concat_hex(v) OVER (
+let sql = "SELECT sha256_concat_hex(v) OVER (
     ORDER BY v ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING)
     FROM tbl LIMIT 1;";
-    let hash: String = db.query_row_and_then(&sql, [], |r| r.get(0)).unwrap();
-    assert_eq!(hash, "FB84A45F6DF7D1D17036F939F1CFEB87339FF5DBDF411222F3762DD76779A287");
+let hash: String = db.query_row_and_then( & sql, [], | r| r.get(0)).unwrap();
+assert_eq!(hash, "FB84A45F6DF7D1D17036F939F1CFEB87339FF5DBDF411222F3762DD76779A287");
 
-    // The above window aggregation example is equivalent to this scalar hash:
-    let sql = "SELECT sha256_hex('aaabbbccc');";
-    let hash: String = db.query_row_and_then(&sql, [], |r| r.get(0)).unwrap();
-    assert_eq!(hash, "FB84A45F6DF7D1D17036F939F1CFEB87339FF5DBDF411222F3762DD76779A287");
-}
+// The above window aggregation example is equivalent to this scalar hash:
+let sql = "SELECT sha256_hex('aaabbbccc');";
+let hash: String = db.query_row_and_then( & sql, [], | r| r.get(0)).unwrap();
+assert_eq!(hash, "FB84A45F6DF7D1D17036F939F1CFEB87339FF5DBDF411222F3762DD76779A287");
 ```
 
-#### Using with SQLx
+#### Using with `SQLx`
 
 To use with [SQLx](https://crates.io/crates/sqlx), you need to get the raw handle from the `SqliteConnection` and pass it to the registration function.
 
@@ -194,10 +190,10 @@ sqlite-hashes = { version = "0.7", default-features = false, features = ["hex", 
 * **sha384** - enable SHA384 hash support
 * **sha512** - enable SHA512 hash support
 * **fnv** - enable FNV-1a hash support
-* **xxhash** - enable xxh32, xxh64, xxh3_64, xxh3_128 hash support
+* **xxhash** - enable `xxh32, xxh64, xxh3_64, xxh3_128` hash support
 
-The **loadable_extension** feature should only be used when building a `.so` / `.dylib` / `.dll` extension file that can
-be loaded directly into sqlite3 executable.
+The **`loadable_extension`** feature should only be used when building
+a `.so` / `.dylib` / `.dll` extension file that can be loaded directly into sqlite3 executable.
 
 ## Development
 
