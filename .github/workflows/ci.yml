@@ -23,7 +23,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: Swatinem/rust-cache@v2
         if: github.event_name != 'release' && github.event_name != 'workflow_dispatch'
-      - run: just test
+      - run: just ci-test
       - name: Check semver
         uses: obi1kenobi/cargo-semver-checks-action@v2
       - name: Get local and published versions
@@ -61,7 +61,7 @@ jobs:
         with:
           toolchain: ${{ steps.metadata.outputs.rust-version }}
           components: clippy,rustfmt
-      - run: just test
+      - run: just ci-test-msrv
 
   build:
     name: Build ${{ matrix.target }}
