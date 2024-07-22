@@ -16,7 +16,7 @@ update:
 build: build-lib build-ext
 
 build-lib:
-    cargo build --workspace --all-targets
+    cargo build --workspace
 
 build-ext *ARGS:
     # Window is not supported because it requires bundling the SQLite library
@@ -80,7 +80,7 @@ test *ARGS: \
     ( test-one-lib "--no-default-features" "--features" "md5,sha1,sha224,sha256,sha384,sha512,fnv,xxhash,hex,trace,aggregate"  ) \
     ( test-one-lib "--no-default-features" "--features" "md5,sha1,sha224,sha256,sha384,sha512,fnv,xxhash,hex,trace,window"     ) \
 
-test-ext:
+test-ext: build-ext
     ./tests/test-ext.sh
 
 cross-test-ext-aarch64:
@@ -109,7 +109,7 @@ rust-info:
     cargo --version
 
 # Run all tests as expected by CI
-ci-test: rust-info test-fmt clippy check test build-ext test-ext test-doc
+ci-test: rust-info test-fmt clippy check test test-ext test-doc
 
 # Run minimal subset of tests to ensure compatibility with MSRV
 ci-test-msrv: rust-info check test
@@ -126,7 +126,7 @@ is-sqlite3-available:
     {{ sqlite3 }} --version
 
 # Run integration tests and save its output as the new expected output
-bless *ARGS: (cargo-install "insta" "cargo-insta")
+bless *ARGS: (cargo-install "cargo-insta")
     cargo insta test --accept --unreferenced=auto {{ ARGS }}
 
 # Check if a certain Cargo command is installed, and install it if needed
