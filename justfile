@@ -53,6 +53,10 @@ docs:
 check:
     RUSTFLAGS='-D warnings' cargo check --workspace --all-targets
 
+# Quick compile - lib-only
+check-lib:
+    RUSTFLAGS='-D warnings' cargo check --workspace
+
 # Test the library
 test *ARGS: \
     ( test-one-lib "--no-default-features" "--features" "trace,hex,window,md5"      ) \
@@ -112,7 +116,7 @@ rust-info:
 ci-test: rust-info test-fmt clippy check test test-ext test-doc
 
 # Run minimal subset of tests to ensure compatibility with MSRV
-ci-test-msrv: rust-info check test
+ci-test-msrv: rust-info check-lib test
 
 [private]
 is-sqlite3-available:
