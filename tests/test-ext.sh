@@ -1,5 +1,5 @@
-#!/usr/bin/env sh
-set -eu
+#!/usr/bin/env bash
+set -euo pipefail
 
 SQLITE3_BIN=${SQLITE3_BIN:-sqlite3}
 EXTENSION_FILE=${EXTENSION_FILE:-target/debug/examples/libsqlite_hashes}
@@ -18,8 +18,8 @@ fi
 echo "Found $SQLITE3_BIN executable $($SQLITE3_BIN --version)"
 
 test_one() {
-    sql=$1
-    expected=$2
+    local sql=$1
+    local expected=$2
 
     echo "Trying to get  '$expected'  from  $sql"
     result=$($SQLITE3_BIN <<EOF
@@ -37,8 +37,8 @@ EOF
 }
 
 test_hash() {
-    hash=$1
-    expected=$2
+    local hash=$1
+    local expected=$2
     test_one "SELECT hex(${hash}('12345'));"         "$expected"
     test_one "SELECT ${hash}_hex('12345');"          "$expected"
     test_one "SELECT hex(${hash}_concat('12345'));"  "$expected"
