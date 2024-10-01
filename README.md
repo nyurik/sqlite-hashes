@@ -85,7 +85,8 @@ Note that the window functionality is not supported in the loadable extension.
 query `SELECT sha256_concat(v) FROM tbl ORDER BY v;` will NOT concatenate values in sorted order, but will use some
 internal storage order instead.
 
-`SQLite` [v3.44.0](https://www.sqlite.org/changes.html#version_3_44_0)(2023-11-01) added support for the `ORDER BY` clause
+`SQLite` [v3.44.0](https://www.sqlite.org/changes.html#version_3_44_0)(2023-11-01) added support for the
+`ORDER BY` clause
 **inside** the aggregate function call, e.g. `SELECT sha256_concat(v ORDER BY v) FROM tbl;`. Make sure to use that to
 guarantee consistent results.
 
@@ -147,7 +148,8 @@ assert_eq!(hash, "FB84A45F6DF7D1D17036F939F1CFEB87339FF5DBDF411222F3762DD76779A2
 
 #### Using with `SQLx`
 
-To use with [SQLx](https://crates.io/crates/sqlx), you need to get the raw handle from the `SqliteConnection` and pass it to the registration function.
+To use with [SQLx](https://crates.io/crates/sqlx), you need to get the raw handle from the
+`SqliteConnection` and pass it to the registration function.
 
 ```rust,ignore
 use rusqlite::Connection;
@@ -197,6 +199,7 @@ a `.so` / `.dylib` / `.dll` extension file that can be loaded directly into sqli
 
 ## Development
 
+* You must install `libsqlite3-dev`, e.g. `sudo apt install -y libsqlite3-dev` on Ubuntu/Mint.
 * This project is easier to develop with [just](https://github.com/casey/just#readme), a modern alternative to `make`.
   Install it with `cargo install just`.
 * To get a list of available commands, run `just`.
