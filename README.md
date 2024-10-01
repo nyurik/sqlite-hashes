@@ -199,7 +199,7 @@ a `.so` / `.dylib` / `.dll` extension file that can be loaded directly into sqli
 
 ## Development
 
-* You must install `libsqlite3-dev`, e.g. `sudo apt install -y libsqlite3-dev` on Ubuntu/Mint.
+* You must install `sqlite3` and `libsqlite3-dev`, e.g. `sudo apt install -y libsqlite3-dev sqlite3` on Ubuntu/Mint.
 * This project is easier to develop with [just](https://github.com/casey/just#readme), a modern alternative to `make`.
   Install it with `cargo install just`.
 * To get a list of available commands, run `just`.

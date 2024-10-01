@@ -6,20 +6,20 @@ EXTENSION_FILE=${EXTENSION_FILE:-target/debug/examples/libsqlite_hashes}
 
 if [ ! -f "$EXTENSION_FILE" ] && [ ! -f "$EXTENSION_FILE.so" ] && [ ! -f "$EXTENSION_FILE.dylib" ] && [ ! -f "$EXTENSION_FILE.dll" ]; then
     echo "Extension file $EXTENSION_FILE [.so|.dylib|.dll] do not exist. Run 'just build-ext' first. Available files:"
-    ls -l $EXTENSION_FILE*
+    ls -l "$EXTENSION_FILE"*
     exit 1
 fi
 echo "Using extension file '$EXTENSION_FILE [.so|.dylib|.dll]'"
 
-if [ ! command -v $SQLITE3_BIN &> /dev/null ]; then
+if ! command -v "$SQLITE3_BIN" > /dev/null; then
     echo "$SQLITE3_BIN executable could not be found"
     exit 1
 fi
 echo "Found $SQLITE3_BIN executable $($SQLITE3_BIN --version)"
 
 test_one() {
-    local sql=$1
-    local expected=$2
+    sql=$1
+    expected=$2
 
     echo "Trying to get  '$expected'  from  $sql"
     result=$($SQLITE3_BIN <<EOF
@@ -37,8 +37,8 @@ EOF
 }
 
 test_hash() {
-    local hash=$1
-    local expected=$2
+    hash=$1
+    expected=$2
     test_one "SELECT hex(${hash}('12345'));"         "$expected"
     test_one "SELECT ${hash}_hex('12345');"          "$expected"
     test_one "SELECT hex(${hash}_concat('12345'));"  "$expected"
