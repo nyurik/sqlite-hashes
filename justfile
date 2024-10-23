@@ -122,7 +122,7 @@ ci-test-msrv: rust-info check-lib test
 is-sqlite3-available:
     #!/usr/bin/env sh
     set -eu
-    if ! command -v {{ sqlite3 }} &> /dev/null; then
+    if ! command -v {{ sqlite3 }} > /dev/null; then
         echo "{{ sqlite3 }} executable could not be found"
         exit 1
     fi
