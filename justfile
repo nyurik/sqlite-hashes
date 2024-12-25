@@ -3,7 +3,7 @@
 sqlite3 := 'sqlite3'
 
 @_default:
-    just --list --unsorted
+    just --list
 
 # Clean all build artifacts
 clean:
@@ -65,7 +65,7 @@ test *ARGS: \
     ( test-one-lib "--no-default-features" "--features" "trace,hex,window,sha256"   ) \
     ( test-one-lib "--no-default-features" "--features" "trace,hex,window,sha384"   ) \
     ( test-one-lib "--no-default-features" "--features" "trace,hex,window,sha512"   ) \
-    ( test-one-lib "--no-default-features" "--features" "trace,hex,window,fnv"   ) \
+    ( test-one-lib "--no-default-features" "--features" "trace,hex,window,fnv"      ) \
     ( test-one-lib "--no-default-features" "--features" "trace,hex,window,xxhash"   ) \
     \
     ( test-one-lib "--no-default-features" "--features" "md5,sha1,sha224,sha256,sha384,sha512,fnv,xxhash"                      ) \
