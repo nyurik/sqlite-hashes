@@ -9,6 +9,7 @@ sqlite3 := 'sqlite3'
 clean:
     cargo clean
 
+# Update dependencies, including breaking changes
 update:
     cargo +nightly -Z unstable-options update --breaking
     cargo update

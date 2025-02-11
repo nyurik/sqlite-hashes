@@ -123,7 +123,7 @@ pub(crate) fn create_hash_fn<T: NamedDigest + Clone + UnwindSafe + RefUnwindSafe
 
 pub fn create_scalar_function<F, T>(conn: &Connection, fn_name: &str, function: F) -> Result<()>
 where
-    F: Fn(&Context<'_>) -> Result<T> + Send + UnwindSafe + 'static,
+    F: Fn(&Context<'_>) -> Result<T> + Send + 'static,
     T: ToSql,
 {
     trace!("Registering function {fn_name}");
