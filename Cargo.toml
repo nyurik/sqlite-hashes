@@ -1,6 +1,6 @@
 [package]
 name = "sqlite-hashes"
-version = "0.7.9"  # This value is also used in the README.md
+version = "0.8.0"  # This value is also used in the README.md
 description = "Hashing functions for SQLite with aggregation support: MD5, SHA1, SHA256, SHA512, FNV-1a, xxHash"
 authors = ["Yuri Astrakhan <YuriAstrakhan@gmail.com>"]
 repository = "https://github.com/nyurik/sqlite-hashes"
@@ -8,7 +8,7 @@ edition = "2021"
 license = "MIT OR Apache-2.0"
 keywords = ["sqlite", "rusqlite", "hash", "md5", "sha256"]
 categories = ["database", "cryptography"]
-rust-version = "1.77.2"
+rust-version = "1.82"
 
 [lib]
 name = "sqlite_hashes"
@@ -61,8 +61,7 @@ hex = { version = "0.4", optional = true }
 log = { version = "0.4.25", optional = true }
 
 # There are multiple versions that could work, but sqlx requires a specific one, so don't limit it here
-# Note that cdylib requires >= 0.32 (controlled by the lock file)
-rusqlite = { version = ">=0.30, <0.33", features = ["functions"] }
+rusqlite = { version = ">=0.33", features = ["functions"] }
 
 # Digest and all hashing algorithms are using the same crates internally, so should be kept in sync
 digest = "0.10.7"
