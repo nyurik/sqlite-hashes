@@ -74,7 +74,7 @@ noncrypto-digests = { version = "0.3.2", optional = true }
 [dev-dependencies]
 cargo-husky = { version = "1", features = ["user-hooks"], default-features = false }
 criterion = { version = "0.5", features = ["html_reports"] }
-ctor = "0.2"
+ctor = "0.3"
 env_logger = "0.11"
 insta = { version = "1", features = [] }
 
