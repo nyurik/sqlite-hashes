@@ -53,7 +53,7 @@ use sqlite_hashes::{register_hash_functions, rusqlite::Connection};
 // Connect to SQLite DB and register needed hashing functions
 let db = Connection::open_in_memory().unwrap();
 // can also use hash-specific ones like register_sha256_functions(&db)
-register_hash_functions( & db).unwrap();
+register_hash_functions(&db).unwrap();
 
 // Hash 'password' using SHA-256, and dump resulting BLOB as a HEX string
 let sql = "SELECT hex(sha256('password'));";
