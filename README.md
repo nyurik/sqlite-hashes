@@ -57,18 +57,18 @@ register_hash_functions(&db).unwrap();
 
 // Hash 'password' using SHA-256, and dump resulting BLOB as a HEX string
 let sql = "SELECT hex(sha256('password'));";
-let hash: String = db.query_row_and_then( & sql, [], | r| r.get(0)).unwrap();
+let hash: String = db.query_row_and_then(&sql, [], |r| r.get(0)).unwrap();
 assert_eq!(hash, "5E884898DA28047151D0E56F8DC6292773603D0D6AABBDD62A11EF721D1542D8");
 
 // Same as above, but use sha256_hex() function to dump the result as a HEX string directly
 let sql = "SELECT sha256_hex('password');";
-let hash: String = db.query_row_and_then( & sql, [], | r| r.get(0)).unwrap();
+let hash: String = db.query_row_and_then(&sql, [], |r| r.get(0)).unwrap();
 assert_eq!(hash, "5E884898DA28047151D0E56F8DC6292773603D0D6AABBDD62A11EF721D1542D8");
 
 // Hash 'pass' (as text) and 'word' (as blob) using SHA-256, and dump it as a HEX string
 // The result is the same as the above 'password' example.
 let sql = "SELECT sha256_hex(cast('pass' as text), cast('word' as blob));";
-let hash: String = db.query_row_and_then( & sql, [], | r| r.get(0)).unwrap();
+let hash: String = db.query_row_and_then(&sql, [], |r| r.get(0)).unwrap();
 assert_eq!(hash, "5E884898DA28047151D0E56F8DC6292773603D0D6AABBDD62A11EF721D1542D8");
 ```
 
@@ -126,7 +126,7 @@ least for now.
 use sqlite_hashes::{register_hash_functions, rusqlite::Connection};
 
 let db = Connection::open_in_memory().unwrap();
-register_hash_functions( & db).unwrap();
+register_hash_functions(&db).unwrap();
 
 // Pre-populate the DB with some data. Note that the b values are not alphabetical.
 db.execute_batch("
@@ -137,12 +137,12 @@ db.execute_batch("
 let sql = "SELECT sha256_concat_hex(v) OVER (
     ORDER BY v ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING)
     FROM tbl LIMIT 1;";
-let hash: String = db.query_row_and_then( & sql, [], | r| r.get(0)).unwrap();
+let hash: String = db.query_row_and_then(&sql, [], |r| r.get(0)).unwrap();
 assert_eq!(hash, "FB84A45F6DF7D1D17036F939F1CFEB87339FF5DBDF411222F3762DD76779A287");
 
 // The above window aggregation example is equivalent to this scalar hash:
 let sql = "SELECT sha256_hex('aaabbbccc');";
-let hash: String = db.query_row_and_then( & sql, [], | r| r.get(0)).unwrap();
+let hash: String = db.query_row_and_then(&sql, [], |r| r.get(0)).unwrap();
 assert_eq!(hash, "FB84A45F6DF7D1D17036F939F1CFEB87339FF5DBDF411222F3762DD76779A287");
 ```
 
@@ -178,7 +178,7 @@ binary size.
 
 ```toml
 [dependencies]
-sqlite-hashes = { version = "0.7", default-features = false, features = ["hex", "window", "sha256"] }
+sqlite-hashes = { version = "0.8", default-features = false, features = ["hex", "window", "sha256"] }
 ```
 
 * **trace** - enable tracing support, logging all function calls and their arguments
