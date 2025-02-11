@@ -52,7 +52,7 @@ use sqlite_hashes::{register_hash_functions, rusqlite::Connection};
 
 // Connect to SQLite DB and register needed hashing functions
 let db = Connection::open_in_memory().unwrap();
-// can also use hash-specific ones like register_sha256_functions(&db)  
+// can also use hash-specific ones like register_sha256_functions(&db)
 register_hash_functions( & db).unwrap();
 
 // Hash 'password' using SHA-256, and dump resulting BLOB as a HEX string
@@ -122,7 +122,7 @@ SELECT coalesce(
 Note that window functions are only available in `SQLite` 3.25 and later, so a bundled `SQLite` version must be used, at
 least for now.
 
-```rust 
+```rust
 use sqlite_hashes::{register_hash_functions, rusqlite::Connection};
 
 let db = Connection::open_in_memory().unwrap();
@@ -179,7 +179,7 @@ binary size.
 ```toml
 [dependencies]
 sqlite-hashes = { version = "0.7", default-features = false, features = ["hex", "window", "sha256"] }
-``` 
+```
 
 * **trace** - enable tracing support, logging all function calls and their arguments
 * **hex** - enable hex string functions like `*_hex()` and `*_concat_hex()` (if `aggregate` is enabled)
