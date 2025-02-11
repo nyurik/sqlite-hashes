@@ -1,6 +1,7 @@
-debug/
-target/
 **/*.rs.bk
 *.pdb
 .idea
 .vscode
+debug/
+target/
+venv/
