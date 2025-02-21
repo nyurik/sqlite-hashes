@@ -31,9 +31,11 @@ build-ext *ARGS:
 cross-build-ext *ARGS:
     # Window is not supported because it requires bundling the SQLite library
     # See https://github.com/rusqlite/rusqlite/discussions/1423
-    cross build --example sqlite_hashes --no-default-features --features default_loadable_extension {{ARGS}}
+    cargo build --example sqlite_hashes --no-default-features --features default_loadable_extension {{ARGS}}
 
 cross-build-ext-aarch64: (cross-build-ext "--target=aarch64-unknown-linux-gnu" "--release")
+
+cross-build-ext-apple-darwin: (cross-build-ext "--target=aarch64-apple-darwin" "--release")
 
 # Run cargo clippy
 clippy:

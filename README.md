@@ -207,6 +207,10 @@ a `.so` / `.dylib` / `.dll` extension file that can be loaded directly into sqli
 * On `git push`, it will run a few validations, including `cargo fmt`, `cargo clippy`, and `cargo test`.
   Use `git push --no-verify` to skip these checks.
 
+### MacOS
+
+To build on MacOS, you need to do `rustup target add aarch64-apple-darwin` and then you can `just cross-build-ext-apple-darwin`
+
 ## License
 
 Licensed under either of
