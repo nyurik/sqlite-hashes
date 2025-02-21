@@ -106,7 +106,7 @@ cross-test-ext-aarch64:
 [private]
 test-one-lib *ARGS:
     @echo "### TEST {{ARGS}} #######################################################################################################################"
-    cargo test {{ARGS}}
+    RUSTDOCFLAGS="-D warnings" cargo test {{ARGS}}
 
 # Test documentation
 test-doc:
