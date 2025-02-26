@@ -3,7 +3,7 @@
 [![GitHub](https://img.shields.io/badge/github-sqlite--hashes-8da0cb?logo=github)](https://github.com/nyurik/sqlite-hashes)
 [![crates.io version](https://img.shields.io/crates/v/sqlite-hashes.svg)](https://crates.io/crates/sqlite-hashes)
 [![docs.rs docs](https://docs.rs/sqlite-hashes/badge.svg)](https://docs.rs/sqlite-hashes)
-[![crates.io version](https://img.shields.io/crates/l/sqlite-hashes.svg)](https://github.com/nyurik/sqlite-hashes/blob/main/LICENSE-APACHE)
+[![license](https://img.shields.io/crates/l/sqlite-hashes.svg)](https://github.com/nyurik/sqlite-hashes/blob/main/LICENSE-APACHE)
 [![CI build](https://github.com/nyurik/sqlite-hashes/actions/workflows/ci.yml/badge.svg)](https://github.com/nyurik/sqlite-hashes/actions)
 
 Implement `SQLite` hashing functions with aggregation support, including MD5, SHA1, SHA224, SHA256, SHA384, SHA512,
