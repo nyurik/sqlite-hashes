@@ -13,7 +13,7 @@ rust-version = "1.82"
 [lib]
 name = "sqlite_hashes"
 
-# Loadable extenios is a cdylib (lib), but Rust does not allow multiple libs per crate, so using an example instead.
+# Loadable extension is a cdylib (lib), but Rust does not allow multiple libs per crate, so using an example instead.
 # See https://github.com/rust-lang/cargo/issues/8628
 [[example]]
 name = "sqlite_hashes"

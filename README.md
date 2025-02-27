@@ -26,7 +26,7 @@ The `*_concat` functions support aggregate to compute combined hash over a set o
 e.g. `sha256_concat` and `sha256_concat_hex`. Just like scalar functions, multiple arguments are also supported, so you
 can compute a hash over a set of columns, e.g. `sha256_concat(col1, col2, col3)`.
 
-**Note:** The window functionality is not supported in the loadable extension, only when used as as a Rust crate. PRs
+**Note:** The window functionality is not supported in the loadable extension, only when used as a Rust crate. PRs
 welcome.
 
 ### Extension
