@@ -72,7 +72,7 @@ noncrypto-digests = { version = "0.3.2", optional = true }
 
 [dev-dependencies]
 criterion = { version = "0.5", features = ["html_reports"] }
-ctor = "0.3"
+ctor = "0.4"
 env_logger = "0.11"
 insta = { version = "1", features = [] }
 
