@@ -156,9 +156,13 @@ bench:
     cargo bench
     open target/criterion/report/index.html
 
-# Print current PGRX version
-@print-min-rusqlite-version: (assert "jq")
-    grep '^rusqlite =.*version = ">=' Cargo.toml | sed -E 's/.*version = "[^"0-9]*([0-9.-]+).*/\1/'
+# Switch to the minimum rusqlite version
+set-min-rusqlite-version: (assert "jq")
+    #!/usr/bin/env bash
+    set -eu
+    MIN_RUSQL_VER="$(grep '^rusqlite =.*version = ">=' Cargo.toml | sed -E 's/.*version = "[^"0-9]*([0-9.-]+).*/\1/')"
+    echo "Switching to minimum rusqlite version: $MIN_RUSQL_VER"
+    cargo update -p rusqlite --precise "$MIN_RUSQL_VER"
 
 # Verify that the current version of the crate is not the same as the one published on crates.io
 check-if-published:
