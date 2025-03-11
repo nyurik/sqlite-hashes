@@ -24,7 +24,7 @@ semver *ARGS:
 
 # Find the minimum supported Rust version (MSRV) using cargo-msrv extension, and update Cargo.toml
 msrv:
-    cargo msrv find --write-msrv
+    cargo msrv find --write-msrv --ignore-lockfile
 
 build: build-lib build-ext
 
@@ -156,6 +156,10 @@ bench:
     cargo bench
     open target/criterion/report/index.html
 
+# Print current PGRX version
+@print-min-rusqlite-version: (assert "jq")
+    grep '^rusqlite =.*version = ">=' Cargo.toml | sed -E 's/.*version = "[^"0-9]*([0-9.-]+).*/\1/'
+
 # Verify that the current version of the crate is not the same as the one published on crates.io
 check-if-published:
     #!/usr/bin/env bash
@@ -170,4 +174,12 @@ check-if-published:
         exit 1
     else
         echo "The current crate version has not yet been published."
+    fi
+
+# Ensure that a certain command is available
+[private]
+assert $COMMAND:
+    @if ! type "{{COMMAND}}" > /dev/null; then \
+        echo "Command '{{COMMAND}}' could not be found. Please make sure it has been installed on your computer." ;\
+        exit 1 ;\
     fi
