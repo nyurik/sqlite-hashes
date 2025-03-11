@@ -33,25 +33,6 @@ impl<T: Digest + Clone> HashState<T> {
     }
 
     #[inline]
-    #[cfg(feature = "window")]
-    pub fn calc(&self) -> Option<Vec<u8>> {
-        match self {
-            Self::Created | Self::Started => None,
-            Self::HasValues(hasher) => Some(hasher.clone().finalize().to_vec()),
-        }
-    }
-
-    #[inline]
-    #[cfg(all(feature = "window", feature = "hex"))]
-    pub fn calc_hex(&self) -> Option<String> {
-        match self {
-            Self::Created => None,
-            Self::Started => Some(String::new()),
-            Self::HasValues(hasher) => Some(hasher.clone().finalize().to_vec().encode_hex_upper()),
-        }
-    }
-
-    #[inline]
     pub fn finalize(self) -> Option<Vec<u8>> {
         match self {
             Self::Created | Self::Started => None,

@@ -1,6 +1,6 @@
 [package]
 name = "sqlite-hashes"
-version = "0.8.0"  # This value is also used in the README.md
+version = "0.9.0"  # This value is also used in the README.md
 description = "Hashing functions for SQLite with aggregation support: MD5, SHA1, SHA256, SHA512, FNV-1a, xxHash"
 authors = ["Yuri Astrakhan <YuriAstrakhan@gmail.com>"]
 repository = "https://github.com/nyurik/sqlite-hashes"
@@ -22,10 +22,9 @@ crate-type = ["cdylib"]
 required-features = ["loadable_extension"]
 
 [features]
-default = ["trace", "aggregate", "window", "hex", "md5", "sha1", "sha224", "sha256", "sha384", "sha512", "fnv", "xxhash"]
+default = ["trace", "aggregate", "hex", "md5", "sha1", "sha224", "sha256", "sha384", "sha512", "fnv", "xxhash"]
 # Use this feature to build loadable extension.
 # Assumes --no-default-features.
-# Does not support windowing functionality yet.
 default_loadable_extension = ["loadable_extension", "aggregate", "hex", "md5", "sha1", "sha224", "sha256", "sha384", "sha512", "fnv", "xxhash"]
 #
 # Enable Trace Logging
@@ -37,13 +36,11 @@ hex = ["dep:hex"]
 # Enable aggregate functions
 aggregate = []
 #
-# Enable window functions in addition to aggregate functions. Uses bundled SQLite. Not supported with loadable extension.
-window = ["aggregate", "rusqlite/bundled", "rusqlite/window"]
 # "rusqlite/bundled", "rusqlite/modern_sqlite"
 #
-# Build loadable extension. Not compatible with the window feature.
+# Build loadable extension.
 # See https://github.com/rusqlite/rusqlite/discussions/1423
-# This feature does not work with "rusqlite/modern_sqlite", "window"
+# This feature does not work with "rusqlite/modern_sqlite"
 loadable_extension = ["rusqlite/loadable_extension", "rusqlite/trace"]
 #
 # Hashing algorithms
@@ -61,7 +58,8 @@ hex = { version = "0.4", optional = true }
 log = { version = "0.4.26", optional = true }
 
 # There are multiple versions that could work, but sqlx requires a specific one, so don't limit it here
-rusqlite = { version = ">=0.33", features = ["functions"] }
+# Note that cdylib requires >= 0.32 (controlled by the lock file)
+rusqlite = { version = ">=0.30", features = ["functions"] }
 
 # Digest and all hashing algorithms are using the same crates internally, so should be kept in sync
 digest = "0.10.7"

@@ -201,25 +201,9 @@ INSERT INTO tbl VALUES
         self.sql(&format!("SELECT {func}"))
     }
 
-    pub fn window_text_one<T: FromSql>(&self, func: &str) -> Result<T> {
-        let sql = format!("SELECT {func}(v_text) OVER (ORDER BY v_text ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING) FROM tbl LIMIT 1");
-        self.sql(&sql)
-    }
-
-    pub fn window_text_zero<T: FromSql>(&self, func: &str) -> Result<Vec<T>> {
-        let sql = format!("SELECT {func}(v_text) OVER (ORDER BY v_text ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING) FROM tbl WHERE FALSE");
-        self.list(&sql)
-    }
-
     /// Should return hashes of `[aaa, aaabbb, aaabbbccc]`.
     pub fn growing_text_seq<T: FromSql>(&self, func: &str) -> Result<Vec<T>> {
         let sql = format!("SELECT {func}(v_text) OVER (ORDER BY v_text) FROM tbl");
-        self.list(&sql)
-    }
-
-    /// This query moves the beginning of the window forward, so hash funcs will fail
-    pub fn window_err<T: FromSql>(&self, func: &str) -> Result<Vec<T>> {
-        let sql = format!("SELECT {func}(v_text) OVER (ORDER BY v_text ROWS 1 PRECEDING) FROM tbl");
         self.list(&sql)
     }
 
