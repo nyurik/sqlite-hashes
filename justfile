@@ -32,23 +32,17 @@ build-lib:
     cargo build --workspace
 
 build-ext *ARGS:
-    # Window is not supported because it requires bundling the SQLite library
-    # See https://github.com/rusqlite/rusqlite/discussions/1423
     cargo build --example sqlite_hashes --no-default-features --features default_loadable_extension {{ARGS}}
 
 cross-build-ext *ARGS:
-    # Window is not supported because it requires bundling the SQLite library
-    # See https://github.com/rusqlite/rusqlite/discussions/1423
     cross build --example sqlite_hashes --no-default-features --features default_loadable_extension {{ARGS}}
 
 cross-build-ext-aarch64: (cross-build-ext "--target=aarch64-unknown-linux-gnu" "--release")
 
 # Run cargo clippy
 clippy:
-    cargo clippy -- -D warnings
     cargo clippy --workspace --all-targets -- -D warnings
-    cargo clippy --features aggregate -- -D warnings
-    cargo clippy --features window -- -D warnings
+    cargo clippy --no-default-features --features default_loadable_extension -- -D warnings
 
 # Test code formatting
 test-fmt:
@@ -72,30 +66,26 @@ check-lib:
 
 # Test the library
 test *ARGS: \
-    ( test-one-lib "--no-default-features" "--features" "trace,hex,window,md5"      ) \
-    ( test-one-lib "--no-default-features" "--features" "trace,hex,window,sha1"     ) \
-    ( test-one-lib "--no-default-features" "--features" "trace,hex,window,sha224"   ) \
-    ( test-one-lib "--no-default-features" "--features" "trace,hex,window,sha256"   ) \
-    ( test-one-lib "--no-default-features" "--features" "trace,hex,window,sha384"   ) \
-    ( test-one-lib "--no-default-features" "--features" "trace,hex,window,sha512"   ) \
-    ( test-one-lib "--no-default-features" "--features" "trace,hex,window,fnv"      ) \
-    ( test-one-lib "--no-default-features" "--features" "trace,hex,window,xxhash"   ) \
+    ( test-one-lib "--no-default-features" "--features" "trace,hex,md5"      ) \
+    ( test-one-lib "--no-default-features" "--features" "trace,hex,sha1"     ) \
+    ( test-one-lib "--no-default-features" "--features" "trace,hex,sha224"   ) \
+    ( test-one-lib "--no-default-features" "--features" "trace,hex,sha256"   ) \
+    ( test-one-lib "--no-default-features" "--features" "trace,hex,sha384"   ) \
+    ( test-one-lib "--no-default-features" "--features" "trace,hex,sha512"   ) \
+    ( test-one-lib "--no-default-features" "--features" "trace,hex,fnv"      ) \
+    ( test-one-lib "--no-default-features" "--features" "trace,hex,xxhash"   ) \
     \
     ( test-one-lib "--no-default-features" "--features" "md5,sha1,sha224,sha256,sha384,sha512,fnv,xxhash"                      ) \
     ( test-one-lib "--no-default-features" "--features" "md5,sha1,sha224,sha256,sha384,sha512,fnv,xxhash,aggregate"            ) \
-    ( test-one-lib "--no-default-features" "--features" "md5,sha1,sha224,sha256,sha384,sha512,fnv,xxhash,window"               ) \
     \
     ( test-one-lib "--no-default-features" "--features" "md5,sha1,sha224,sha256,sha384,sha512,fnv,xxhash,hex"                  ) \
     ( test-one-lib "--no-default-features" "--features" "md5,sha1,sha224,sha256,sha384,sha512,fnv,xxhash,hex,aggregate"        ) \
-    ( test-one-lib "--no-default-features" "--features" "md5,sha1,sha224,sha256,sha384,sha512,fnv,xxhash,hex,window"           ) \
     \
     ( test-one-lib "--no-default-features" "--features" "md5,sha1,sha224,sha256,sha384,sha512,fnv,xxhash,trace"                ) \
     ( test-one-lib "--no-default-features" "--features" "md5,sha1,sha224,sha256,sha384,sha512,fnv,xxhash,trace,aggregate"      ) \
-    ( test-one-lib "--no-default-features" "--features" "md5,sha1,sha224,sha256,sha384,sha512,fnv,xxhash,trace,window"         ) \
     \
     ( test-one-lib "--no-default-features" "--features" "md5,sha1,sha224,sha256,sha384,sha512,fnv,xxhash,hex,trace"            ) \
     ( test-one-lib "--no-default-features" "--features" "md5,sha1,sha224,sha256,sha384,sha512,fnv,xxhash,hex,trace,aggregate"  ) \
-    ( test-one-lib "--no-default-features" "--features" "md5,sha1,sha224,sha256,sha384,sha512,fnv,xxhash,hex,trace,window"     ) \
 
 test-ext: build-ext
     ./tests/test-ext.sh

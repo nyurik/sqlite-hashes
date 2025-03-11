@@ -26,9 +26,6 @@ The `*_concat` functions support aggregate to compute combined hash over a set o
 e.g. `sha256_concat` and `sha256_concat_hex`. Just like scalar functions, multiple arguments are also supported, so you
 can compute a hash over a set of columns, e.g. `sha256_concat(col1, col2, col3)`.
 
-**Note:** The window functionality is not supported in the loadable extension, only when used as a Rust crate. PRs
-welcome.
-
 ### Extension
 
 To use as an extension, load the `libsqlite_hashes.so` shared library into `SQLite`.
@@ -72,12 +69,11 @@ let hash: String = db.query_row_and_then(&sql, [], |r| r.get(0)).unwrap();
 assert_eq!(hash, "5E884898DA28047151D0E56F8DC6292773603D0D6AABBDD62A11EF721D1542D8");
 ```
 
-### Aggregate and Window Functions
+### Aggregate Functions
 
-When `aggregate` or `window` feature is enabled (default), there are functions to compute combined hash over a set of
+When `aggregate` feature is enabled (default), there are functions to compute combined hash over a set of
 values like a column in a table, e.g. `sha256_concat` and `sha256_concat_hex`. Just like scalar functions, multiple
 arguments are also supported, so you can compute a hash over a set of columns, e.g. `sha256_concat(col1, col2, col3)`.
-Note that the window functionality is not supported in the loadable extension.
 
 #### IMPORTANT NOTE: ORDERING
 
@@ -94,57 +90,6 @@ For older `SQLite` versions, one common workaround was to use a subquery,
 e.g. `SELECT group_concat(v) FROM (SELECT v FROM tbl ORDER BY v);`. This is
 NOT guaranteed to work in future versions of `SQLite`. See [discussion](https://sqlite.org/forum/info/a49d9c4083b5350c)
 for more details.
-
-Another way for older `SQLite` to guarantee the ordering is to use a window function.
-
-```sql,ignore
-SELECT sha256_concat_hex(v)
-       OVER (ORDER BY v ROWS
-           BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING)
-FROM tbl
-LIMIT 1;
-```
-
-The hashing window functions will only work if the starting point of the window is not moving (`UNBOUNDED PRECEDING`).
-To force a non-NULL value, use COALESCE:
-
-```sql,ignore
-SELECT coalesce(
-               (SELECT sha256_concat_hex(v)
-                       OVER (ORDER BY v ROWS
-                           BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING)
-                FROM tbl
-                LIMIT 1),
-               sha256_hex('')
-       );
-```
-
-Note that window functions are only available in `SQLite` 3.25 and later, so a bundled `SQLite` version must be used, at
-least for now.
-
-```rust
-use sqlite_hashes::{register_hash_functions, rusqlite::Connection};
-
-let db = Connection::open_in_memory().unwrap();
-register_hash_functions(&db).unwrap();
-
-// Pre-populate the DB with some data. Note that the b values are not alphabetical.
-db.execute_batch("
-    CREATE TABLE tbl(id INTEGER PRIMARY KEY, v TEXT);
-    INSERT INTO tbl VALUES (1, 'bbb'), (2, 'ccc'), (3, 'aaa');
-  ").unwrap();
-
-let sql = "SELECT sha256_concat_hex(v) OVER (
-    ORDER BY v ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING)
-    FROM tbl LIMIT 1;";
-let hash: String = db.query_row_and_then(&sql, [], |r| r.get(0)).unwrap();
-assert_eq!(hash, "FB84A45F6DF7D1D17036F939F1CFEB87339FF5DBDF411222F3762DD76779A287");
-
-// The above window aggregation example is equivalent to this scalar hash:
-let sql = "SELECT sha256_hex('aaabbbccc');";
-let hash: String = db.query_row_and_then(&sql, [], |r| r.get(0)).unwrap();
-assert_eq!(hash, "FB84A45F6DF7D1D17036F939F1CFEB87339FF5DBDF411222F3762DD76779A287");
-```
 
 #### Using with `SQLx`
 
@@ -178,13 +123,12 @@ binary size.
 
 ```toml
 [dependencies]
-sqlite-hashes = { version = "0.8", default-features = false, features = ["hex", "window", "sha256"] }
+sqlite-hashes = { version = "0.9", default-features = false, features = ["hex", "aggregate", "sha256"] }
 ```
 
 * **trace** - enable tracing support, logging all function calls and their arguments
 * **hex** - enable hex string functions like `*_hex()` and `*_concat_hex()` (if `aggregate` is enabled)
 * **aggregate** - enable aggregate functions like `*_concat()` and `*_concat_hex()` (if `hex` is enabled)
-* **window** - enable window functions support (implies `aggregate`)
 * **md5** - enable MD5 hash support
 * **sha1** - enable SHA1 hash support
 * **sha224** - enable SHA224 hash support
@@ -209,8 +153,8 @@ a `.so` / `.dylib` / `.dll` extension file that can be loaded directly into sqli
 
 Licensed under either of
 
-* Apache License, Version 2.0 ([LICENSE-APACHE](LICENSE-APACHE) or <http://www.apache.org/licenses/LICENSE-2.0>)
-* MIT license ([LICENSE-MIT](LICENSE-MIT) or <http://opensource.org/licenses/MIT>)
+* Apache License, Version 2.0 ([LICENSE-APACHE](LICENSE-APACHE) or <https://www.apache.org/licenses/LICENSE-2.0>)
+* MIT license ([LICENSE-MIT](LICENSE-MIT) or <https://opensource.org/licenses/MIT>)
   at your option.
 
 ### Contribution

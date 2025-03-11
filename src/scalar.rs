@@ -93,10 +93,8 @@ pub(crate) fn create_hash_fn<T: NamedDigest + Clone + UnwindSafe + RefUnwindSafe
             conn,
             &fn_name,
             crate::aggregate::AggType::<T, Vec<u8>>::new(
-                #[cfg(any(feature = "window", feature = "trace"))]
+                #[cfg(feature = "trace")]
                 &fn_name,
-                #[cfg(feature = "window")]
-                HashState::calc,
                 HashState::finalize,
             ),
         )?;
@@ -109,10 +107,8 @@ pub(crate) fn create_hash_fn<T: NamedDigest + Clone + UnwindSafe + RefUnwindSafe
             conn,
             &fn_name,
             crate::aggregate::AggType::<T, String>::new(
-                #[cfg(any(feature = "window", feature = "trace"))]
+                #[cfg(feature = "trace")]
                 &fn_name,
-                #[cfg(feature = "window")]
-                HashState::calc_hex,
                 HashState::finalize_hex,
             ),
         )?;
