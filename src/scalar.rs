@@ -119,6 +119,7 @@ pub(crate) fn create_hash_fn<T: NamedDigest + Clone + UnwindSafe + RefUnwindSafe
 
 pub fn create_scalar_function<F, T>(conn: &Connection, fn_name: &str, function: F) -> Result<()>
 where
+    // TODO: Newer versions do not require UnwindSafe
     F: Fn(&Context<'_>) -> Result<T> + Send + UnwindSafe + 'static,
     T: ToSql,
 {
