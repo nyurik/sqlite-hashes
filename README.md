@@ -5,6 +5,7 @@
 [![docs.rs docs](https://docs.rs/sqlite-hashes/badge.svg)](https://docs.rs/sqlite-hashes)
 [![license](https://img.shields.io/crates/l/sqlite-hashes.svg)](https://github.com/nyurik/sqlite-hashes/blob/main/LICENSE-APACHE)
 [![CI build](https://github.com/nyurik/sqlite-hashes/actions/workflows/ci.yml/badge.svg)](https://github.com/nyurik/sqlite-hashes/actions)
+[![Codecov](https://img.shields.io/codecov/c/github/nyurik/sqlite-hashes)](https://app.codecov.io/gh/nyurik/sqlite-hashes)
 
 Implement `SQLite` hashing functions with aggregation support, including MD5, SHA1, SHA224, SHA256, SHA384, SHA512,
 FNV-1a, xxHash. Functions are available as a loadable extension, or as a Rust library.
