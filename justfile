@@ -64,6 +64,18 @@ check:
 check-lib:
     RUSTFLAGS='-D warnings' cargo check --workspace
 
+# Generate code coverage report
+coverage *ARGS="--no-clean --open":
+    cargo llvm-cov --workspace --all-targets --include-build-script {{ARGS}}
+    # TODO: add test coverage for the loadable extension too, and combine them
+    # cargo llvm-cov --example sqlite_hashes --no-default-features --features default_loadable_extension --codecov --output-path codecov.info
+
+# Generate code coverage report to upload to codecov.io
+ci-coverage: && \
+            (coverage '--codecov --output-path target/llvm-cov/codecov.info')
+    # ATTENTION: the full file path above is used in the CI workflow
+    mkdir -p target/llvm-cov
+
 # Test the library
 test *ARGS: \
     ( test-one-lib "--no-default-features" "--features" "trace,hex,md5"      ) \
