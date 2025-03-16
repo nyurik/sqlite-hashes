@@ -5,3 +5,5 @@
 debug/
 target/
 venv/
+tmp/
+temp/

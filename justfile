@@ -1,5 +1,6 @@
 #!/usr/bin/env just --justfile
 
+crate_name := 'sqlite_hashes'
 sqlite3 := 'sqlite3'
 
 @_default:
@@ -32,10 +33,10 @@ build-lib:
     cargo build --workspace
 
 build-ext *ARGS:
-    cargo build --example sqlite_hashes --no-default-features --features default_loadable_extension {{ARGS}}
+    cargo build --example {{crate_name}} --no-default-features --features default_loadable_extension {{ARGS}}
 
 cross-build-ext *ARGS:
-    cross build --example sqlite_hashes --no-default-features --features default_loadable_extension {{ARGS}}
+    cross build --example {{crate_name}} --no-default-features --features default_loadable_extension {{ARGS}}
 
 cross-build-ext-aarch64: (cross-build-ext "--target=aarch64-unknown-linux-gnu" "--release")
 
@@ -68,7 +69,7 @@ check-lib:
 coverage *ARGS="--no-clean --open":
     cargo llvm-cov --workspace --all-targets --include-build-script {{ARGS}}
     # TODO: add test coverage for the loadable extension too, and combine them
-    # cargo llvm-cov --example sqlite_hashes --no-default-features --features default_loadable_extension --codecov --output-path codecov.info
+    # cargo llvm-cov --example {{crate_name}} --no-default-features --features default_loadable_extension --codecov --output-path codecov.info
 
 # Generate code coverage report to upload to codecov.io
 ci-coverage: && \
@@ -108,7 +109,7 @@ cross-test-ext-aarch64:
             -v "$(pwd):/workspace" \
             -w /workspace \
             --entrypoint sh \
-            -e EXTENSION_FILE=target/aarch64-unknown-linux-gnu/release/examples/libsqlite_hashes \
+            -e EXTENSION_FILE=target/aarch64-unknown-linux-gnu/release/examples/lib{{crate_name}} \
             --platform linux/arm64 \
             arm64v8/ubuntu \
             -c 'apt-get update && apt-get install -y sqlite3 && tests/test-ext.sh'
