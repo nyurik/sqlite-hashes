@@ -4,6 +4,6 @@
 .vscode
 debug/
 target/
-venv/
-tmp/
 temp/
+tmp/
+venv/

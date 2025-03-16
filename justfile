@@ -10,7 +10,7 @@ sqlite3 := 'sqlite3'
 clean:
     cargo clean
 
-# Update dependencies, including breaking changes
+# Update all dependencies, including breaking changes. Requires nightly toolchain (install with `rustup install nightly`)
 update:
     cargo +nightly -Z unstable-options update --breaking
     cargo update
@@ -40,7 +40,7 @@ cross-build-ext *ARGS:
 
 cross-build-ext-aarch64: (cross-build-ext "--target=aarch64-unknown-linux-gnu" "--release")
 
-# Run cargo clippy
+# Run cargo clippy to lint the code
 clippy:
     cargo clippy --workspace --all-targets -- -D warnings
     cargo clippy --no-default-features --features default_loadable_extension -- -D warnings
@@ -49,15 +49,23 @@ clippy:
 test-fmt:
     cargo fmt --all -- --check
 
-# Run cargo fmt
+# Reformat all code `cargo fmt`. If nightly is available, use it for better results
 fmt:
-    cargo +nightly fmt -- --config imports_granularity=Module,group_imports=StdExternalCrate
+    #!/usr/bin/env bash
+    set -euo pipefail
+    if command -v cargo +nightly &> /dev/null; then
+        echo 'Reformatting Rust code using nightly Rust fmt to sort imports'
+        cargo +nightly fmt --all -- --config imports_granularity=Module,group_imports=StdExternalCrate
+    else
+        echo 'Reformatting Rust with the stable cargo fmt.  Install nightly with `rustup install nightly` for better results'
+        cargo fmt --all
+    fi
 
 # Build and open code documentation
 docs:
     cargo doc --no-deps --open
 
-# Quick compile
+# Quick compile without building a binary
 check:
     RUSTFLAGS='-D warnings' cargo check --workspace --all-targets
 
@@ -124,7 +132,8 @@ test-doc:
     cargo test --doc
     RUSTDOCFLAGS="-D warnings" cargo doc --no-deps
 
-rust-info:
+# Print Rust version information
+@rust-info:
     rustc --version
     cargo --version
 
