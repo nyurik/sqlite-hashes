@@ -71,7 +71,7 @@ $db->loadExtension('libsqlite_hashes.so');
 echo $db->querySingle("SELECT hex(sha256('password'))");
 ```
 
-Warning: According to https://github.com/nyurik/sqlite-hashes/issues/71, PHP 7 fails to load the extension with or without specifying the file extension as it ends up looking for a file with a double extension (e.g., libsqlite_hashes.so.so). Therefore, we recommend using it with PHP 8.
+Warning: According to <https://github.com/nyurik/sqlite-hashes/issues/71>, PHP 7 fails to load the extension with or without specifying the file extension as it ends up looking for a file with a double extension (e.g., libsqlite_hashes.so.so). Therefore, we recommend using it with PHP 8.
 
 ### Rust library
 
