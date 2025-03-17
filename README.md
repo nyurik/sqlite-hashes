@@ -38,6 +38,41 @@ sqlite> SELECT md5_hex('Hello world!');
 86FB269D190D2C85F6E0468CECA42A20
 ```
 
+### PHP
+
+To load the extension from PHP, store `libsqlite_hashes.so` in your SQLite extensions folder. If you don't have any extensions yet, you can determine your SQLite extensions folder by defining the `sqlite3.extension_dir` variable as the filepath to the extensions directory in your `php.ini` file.
+
+```ini
+sqlite3.extension_dir = /path/to/sqlite/extensions
+```
+
+Obs¹: To locate your `php.ini` file refer to the following [post in StackOverflow](https://stackoverflow.com/questions/8684609/where-can-i-find-php-ini).
+
+Obs²: To verify if your changes to `php.ini` took effect, you can run `phpinfo();` in PHP as follows:
+
+```bash
+$ php -r 'phpinfo();' | grep sqlite
+Configure Command =>  './configure'  '--build=x86_64-linux-gnu' '--with-config-file-path=/usr/local/etc/php' '--with-config-file-scan-dir=/usr/local/etc/php/conf.d' '--enable-option-checking=fatal' '--with-mhash' '--with-pic' '--enable-mbstring' '--enable-mysqlnd' '--with-password-argon2' '--with-sodium=shared' '--with-pdo-sqlite=/usr' '--with-sqlite3=/usr' '--with-curl' '--with-iconv' '--with-openssl' '--with-readline' '--with-zlib' '--disable-phpdbg' '--with-pear' '--with-libdir=lib/x86_64-linux-gnu' '--disable-cgi' '--with-apxs2' 'build_alias=x86_64-linux-gnu' 'PHP_UNAME=Linux - Docker' 'PHP_BUILD_PROVIDER=https://github.com/docker-library/php'
+PDO drivers => sqlite
+pdo_sqlite
+sqlite3
+sqlite3.defensive => On => On
+sqlite3.extension_dir => /var/www/extensions/ => /var/www/extensions/
+```
+
+Now, make sure to always load the extension by running `SQLite3::loadExtension('libsqlite_hashes.so');` (remember to include the correct file extension according to your Operating System, e.g., `.so` for Linux, `.dll` for Windows, and `.dylib` for MacOS) in each project you intend to use sqlite hash functions.
+
+For instance, the following code snippet demonstrate the minimum required code to run SHA256 in a string "password":
+
+```php
+<?php
+$db = new SQLite3(':memory:');
+$db->loadExtension('libsqlite_hashes.so');
+echo $db->querySingle("SELECT hex(sha256('password'))");
+```
+
+Warning: According to https://github.com/nyurik/sqlite-hashes/issues/71, PHP 7 fails to load the extension with or without specifying the file extension as it ends up looking for a file with a double extension (e.g., libsqlite_hashes.so.so). Therefore, we recommend using it with PHP 8.
+
 ### Rust library
 
 To use as a Rust library, add `sqlite-hashes` to your `Cargo.toml` dependencies. Then, register the needed functions
