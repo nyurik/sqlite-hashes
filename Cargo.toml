@@ -55,7 +55,7 @@ xxhash = ["dep:noncrypto-digests", "noncrypto-digests?/xxh3", "noncrypto-digests
 
 [dependencies]
 hex = { version = "0.4", optional = true }
-log = { version = "0.4.26", optional = true }
+log = { version = "0.4.27", optional = true }
 
 # There are multiple versions that could work, but sqlx requires a specific one, so don't limit it here
 # Note that cdylib requires >= 0.32.0 (controlled by the lock file)
