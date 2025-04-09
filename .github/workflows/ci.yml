@@ -18,15 +18,15 @@ jobs:
     name: Test
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v4
+      - if: github.event_name != 'release' && github.event_name != 'workflow_dispatch'
+        uses: Swatinem/rust-cache@v2
       - uses: taiki-e/install-action@v2
         with: { tool: 'just,cargo-llvm-cov' }
-      - uses: actions/checkout@v4
       - if: github.event_name == 'release'
         name: Ensure this crate has not yet been published (on release)
         run: just check-if-published
-      - if: github.event_name != 'release' && github.event_name != 'workflow_dispatch'
-        uses: Swatinem/rust-cache@v2
-      - run: RUST_BACKTRACE=1 just ci-test
+      - run: RUST_BACKTRACE=1 just -v ci-test
       - name: Check semver
         uses: obi1kenobi/cargo-semver-checks-action@v2
       - if: github.event_name != 'release' && github.event_name != 'workflow_dispatch'
@@ -44,11 +44,11 @@ jobs:
     name: Test MSRV
     runs-on: ubuntu-latest
     steps:
-      - uses: taiki-e/install-action@v2
-        with: { tool: just }
       - uses: actions/checkout@v4
       - if: github.event_name != 'release' && github.event_name != 'workflow_dispatch'
         uses: Swatinem/rust-cache@v2
+      - uses: taiki-e/install-action@v2
+        with: { tool: just }
       - name: Read MSRV
         id: msrv
         run: echo "value=$(sed -ne 's/rust-version *= *\"\(.*\)\"/\1/p' Cargo.toml)" >> $GITHUB_OUTPUT
@@ -57,7 +57,7 @@ jobs:
         with:
           toolchain: ${{ steps.msrv.outputs.value }}
           components: rustfmt
-      - run: just ci-test-msrv
+      - run: just -v ci-test-msrv
 
   build:
     name: Build ${{ matrix.target }}
@@ -86,11 +86,11 @@ jobs:
             os: ubuntu-latest
             sqlite3: sqlite3
     steps:
-      - uses: taiki-e/install-action@v2
-        with: { tool: just }
       - uses: actions/checkout@v4
       - if: github.event_name != 'release' && github.event_name != 'workflow_dispatch'
         uses: Swatinem/rust-cache@v2
+      - uses: taiki-e/install-action@v2
+        with: { tool: just }
       - if: matrix.download
         name: Download SQLite
         uses: carlosperate/download-file-action@v2
@@ -157,12 +157,12 @@ jobs:
     name: Cross-build
     runs-on: ubuntu-latest
     steps:
-      - uses: taiki-e/install-action@v2
-        with:
-          tool: just,cross
       - uses: actions/checkout@v4
       - if: github.event_name != 'release' && github.event_name != 'workflow_dispatch'
         uses: Swatinem/rust-cache@v2
+      - uses: taiki-e/install-action@v2
+        with:
+          tool: just,cross
       - run: just cross-build-ext-aarch64
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3

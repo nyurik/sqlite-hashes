@@ -41,9 +41,9 @@ cross-build-ext *ARGS:
 cross-build-ext-aarch64: (cross-build-ext "--target=aarch64-unknown-linux-gnu" "--release")
 
 # Run cargo clippy to lint the code
-clippy:
-    cargo clippy --workspace --all-targets -- -D warnings
-    cargo clippy --no-default-features --features default_loadable_extension -- -D warnings
+clippy *ARGS:
+    cargo clippy --workspace --all-targets {{ARGS}}
+    cargo clippy --no-default-features --features default_loadable_extension {{ARGS}}
 
 # Test code formatting
 test-fmt:
@@ -67,11 +67,11 @@ docs:
 
 # Quick compile without building a binary
 check:
-    RUSTFLAGS='-D warnings' cargo check --workspace --all-targets
+    cargo check --workspace --all-targets
 
 # Quick compile - lib-only
 check-lib:
-    RUSTFLAGS='-D warnings' cargo check --workspace
+    cargo check --workspace
 
 # Generate code coverage report
 coverage *ARGS="--no-clean --open":
@@ -125,12 +125,12 @@ cross-test-ext-aarch64:
 [private]
 test-one-lib *ARGS:
     @echo "### TEST {{ARGS}} #######################################################################################################################"
-    RUSTDOCFLAGS="-D warnings" cargo test {{ARGS}}
+    cargo test {{ARGS}}
 
 # Test documentation
 test-doc:
-    RUSTDOCFLAGS="-D warnings" cargo test --doc
-    RUSTDOCFLAGS="-D warnings" cargo doc --no-deps
+    cargo test --doc
+    cargo doc --no-deps
 
 # Print Rust version information
 @rust-info:
@@ -138,15 +138,20 @@ test-doc:
     cargo --version
 
 # Run all tests as expected by CI
-ci-test: rust-info test-fmt clippy check test test-ext test-doc
+ci-test: rust-info test-fmt
+    RUSTFLAGS='-D warnings' {{just_executable()}} check
+    {{just_executable()}} clippy -- -D warnings
+    RUSTFLAGS='-D warnings' {{just_executable()}} test
+    {{just_executable()}} test-ext
+    RUSTDOCFLAGS='-D warnings' {{just_executable()}} test-doc
 
 # Run minimal subset of tests to ensure compatibility with MSRV
 ci-test-msrv: rust-info check-lib test
 
 [private]
 is-sqlite3-available:
-    #!/usr/bin/env sh
-    set -eu
+    #!/usr/bin/env bash
+    set -euo pipefail
     if ! command -v {{sqlite3}} > /dev/null; then
         echo "{{sqlite3}} executable could not be found"
         exit 1
@@ -161,8 +166,8 @@ bless *ARGS: (cargo-install "cargo-insta")
 # Check if a certain Cargo command is installed, and install it if needed
 [private]
 cargo-install $COMMAND $INSTALL_CMD="" *ARGS="":
-    #!/usr/bin/env sh
-    set -eu
+    #!/usr/bin/env bash
+    set -euo pipefail
     if ! command -v $COMMAND > /dev/null; then
         if ! command -v cargo-binstall > /dev/null; then
             echo "$COMMAND could not be found. Installing it with    cargo install ${INSTALL_CMD:-$COMMAND} {{ARGS}}"
@@ -181,14 +186,15 @@ bench:
 # Switch to the minimum rusqlite version
 set-min-rusqlite-version: (assert "jq")
     #!/usr/bin/env bash
-    set -eu
+    set -euo pipefail
     MIN_RUSQL_VER="$(grep '^rusqlite =.*version = ">=' Cargo.toml | sed -E 's/.*version = "[^"0-9]*([0-9.-]+).*/\1/')"
     echo "Switching to minimum rusqlite version: $MIN_RUSQL_VER"
     cargo update -p rusqlite --precise "$MIN_RUSQL_VER"
 
 # Verify that the current version of the crate is not the same as the one published on crates.io
-check-if-published:
+check-if-published: (assert "jq")
     #!/usr/bin/env bash
+    set -euo pipefail
     LOCAL_VERSION="$(grep '^version =' Cargo.toml | sed -E 's/version = "([^"]*)".*/\1/')"
     echo "Detected crate version:  $LOCAL_VERSION"
     CRATE_NAME="$(grep '^name =' Cargo.toml | head -1 | sed -E 's/name = "(.*)"/\1/')"

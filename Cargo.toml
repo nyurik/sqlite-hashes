@@ -79,6 +79,7 @@ insta = { version = "1", features = [] }
 unused_qualifications = "warn"
 
 [lints.clippy]
+cargo = { level = "warn", priority = -1 }
 pedantic = { level = "warn", priority = -1 }
 missing_errors_doc = "allow"
 module_name_repetitions = "allow"
