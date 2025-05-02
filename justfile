@@ -1,6 +1,7 @@
 #!/usr/bin/env just --justfile
 
-crate_name := 'sqlite_hashes'
+crate_name := 'sqlite-hashes'
+bin_name := 'sqlite_hashes'
 sqlite3 := 'sqlite3'
 
 @_default:
@@ -27,16 +28,23 @@ semver *ARGS:
 msrv:
     cargo msrv find --write-msrv --ignore-lockfile
 
+# Get the minimum supported Rust version (MSRV) for the crate
+get-msrv: (get-crate-field "rust_version" crate_name)
+
+# Get any package's field from the metadata
+get-crate-field field package=crate_name:
+    cargo metadata --format-version 1 | jq -r '.packages | map(select(.name == "{{package}}")) | first | .{{field}}'
+
 build: build-lib build-ext
 
 build-lib:
     cargo build --workspace
 
 build-ext *ARGS:
-    cargo build --example {{crate_name}} --no-default-features --features default_loadable_extension {{ARGS}}
+    cargo build --example {{bin_name}} --no-default-features --features default_loadable_extension {{ARGS}}
 
 cross-build-ext *ARGS:
-    cross build --example {{crate_name}} --no-default-features --features default_loadable_extension {{ARGS}}
+    cross build --example {{bin_name}} --no-default-features --features default_loadable_extension {{ARGS}}
 
 cross-build-ext-aarch64: (cross-build-ext "--target=aarch64-unknown-linux-gnu" "--release")
 
@@ -77,7 +85,7 @@ check-lib:
 coverage *ARGS="--no-clean --open":
     cargo llvm-cov --workspace --all-targets --include-build-script {{ARGS}}
     # TODO: add test coverage for the loadable extension too, and combine them
-    # cargo llvm-cov --example {{crate_name}} --no-default-features --features default_loadable_extension --codecov --output-path codecov.info
+    # cargo llvm-cov --example {{bin_name}} --no-default-features --features default_loadable_extension --codecov --output-path codecov.info
 
 # Generate code coverage report to upload to codecov.io
 ci-coverage: && \
@@ -117,7 +125,7 @@ cross-test-ext-aarch64:
             -v "$(pwd):/workspace" \
             -w /workspace \
             --entrypoint sh \
-            -e EXTENSION_FILE=target/aarch64-unknown-linux-gnu/release/examples/lib{{crate_name}} \
+            -e EXTENSION_FILE=target/aarch64-unknown-linux-gnu/release/examples/lib{{bin_name}} \
             --platform linux/arm64 \
             arm64v8/ubuntu \
             -c 'apt-get update && apt-get install -y sqlite3 && tests/test-ext.sh'
@@ -195,9 +203,9 @@ set-min-rusqlite-version: (assert "jq")
 check-if-published: (assert "jq")
     #!/usr/bin/env bash
     set -euo pipefail
-    LOCAL_VERSION="$(grep '^version =' Cargo.toml | sed -E 's/version = "([^"]*)".*/\1/')"
+    LOCAL_VERSION="$({{just_executable()}} get-crate-field version)"
     echo "Detected crate version:  $LOCAL_VERSION"
-    CRATE_NAME="$(grep '^name =' Cargo.toml | head -1 | sed -E 's/name = "(.*)"/\1/')"
+    CRATE_NAME="$({{just_executable()}} get-crate-field name)"
     echo "Detected crate name:     $CRATE_NAME"
     PUBLISHED_VERSION="$(cargo search ${CRATE_NAME} | grep "^${CRATE_NAME} =" | sed -E 's/.* = "(.*)".*/\1/')"
     echo "Published crate version: $PUBLISHED_VERSION"
