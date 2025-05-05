@@ -10,11 +10,12 @@
     feature = "sha256",
     feature = "sha384",
     feature = "sha512",
+    feature = "blake3",
     feature = "fnv",
     feature = "xxhash",
 )))]
 compile_error!(
-    "At least one of these features must be enabled: md5,sha1,sha224,sha256,sha384,sha512,fnv,xxhash"
+    "At least one of these features must be enabled: md5,sha1,sha224,sha256,sha384,sha512,blake3,fnv,xxhash"
 );
 
 /// Re-export of the [`rusqlite`](https://crates.io/crates/rusqlite) crate to avoid version conflicts.
@@ -66,6 +67,12 @@ mod sha512;
 #[cfg(feature = "sha512")]
 pub use crate::sha512::register_sha512_functions;
 
+#[cfg(feature = "blake3")]
+mod blake3;
+
+#[cfg(feature = "blake3")]
+pub use crate::blake3::register_blake3_functions;
+
 #[cfg(feature = "fnv")]
 mod fnv;
 
@@ -114,6 +121,10 @@ pub use crate::xxhash::register_xxhash_functions;
 /// let hash: String = db.query_row("SELECT sha512_hex('hello')", [], |r| r.get(0))?;
 /// assert_eq!(hash, "9B71D224BD62F3785D96D46AD3EA3D73319BFBC2890CAADAE2DFF72519673CA72323C3D99BA5C11D7C7ACC6E14B8C5DA0C4663475C2E5C3ADEF46F73BCDEC043");
 /// # }
+/// # if cfg!(all(feature = "hex", feature = "blake3")) {
+/// let hash: String = db.query_row("SELECT blake3_hex('hello')", [], |r| r.get(0))?;
+/// assert_eq!(hash, "EA8F163DB38682925E4491C5E58D4BB3506EF8C14EB78A86E908C5624A67200F");
+/// # }
 /// # if cfg!(all(feature = "hex", feature = "fnv")) {
 /// let hash: String = db.query_row("SELECT fnv1a_hex('hello')", [], |r| r.get(0))?;
 /// assert_eq!(hash, "A430D84680AABD0B");
@@ -144,6 +155,8 @@ pub fn register_hash_functions(conn: &Connection) -> Result<()> {
     register_sha384_functions(conn)?;
     #[cfg(feature = "sha512")]
     register_sha512_functions(conn)?;
+    #[cfg(feature = "blake3")]
+    register_blake3_functions(conn)?;
     #[cfg(feature = "fnv")]
     register_fnv_functions(conn)?;
     #[cfg(feature = "xxhash")]

@@ -50,8 +50,10 @@ digest_names! {
     sha2::Sha256 => "sha256",
     sha2::Sha384 => "sha384",
     sha2::Sha512 => "sha512",
+    blake3::Hasher => "blake3",
 }
 
+// Explicitly specify the feature flags when the fn name is different
 digest_names! {
     noncrypto_digests::Fnv => "fnv1a" @ "fnv",
     noncrypto_digests::Xxh32 => "xxh32" @ "xxhash",

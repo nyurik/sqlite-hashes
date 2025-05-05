@@ -171,6 +171,7 @@ sqlite-hashes = { version = "0.9", default-features = false, features = ["hex", 
 * **sha256** - enable SHA256 hash support
 * **sha384** - enable SHA384 hash support
 * **sha512** - enable SHA512 hash support
+* **blake3** - enable BLAKE3 hash support
 * **fnv** - enable FNV-1a hash support
 * **xxhash** - enable `xxh32, xxh64, xxh3_64, xxh3_128` hash support
 

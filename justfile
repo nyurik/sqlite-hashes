@@ -101,20 +101,21 @@ test *ARGS: \
     ( test-one-lib "--no-default-features" "--features" "trace,hex,sha256"   ) \
     ( test-one-lib "--no-default-features" "--features" "trace,hex,sha384"   ) \
     ( test-one-lib "--no-default-features" "--features" "trace,hex,sha512"   ) \
+    ( test-one-lib "--no-default-features" "--features" "trace,hex,blake3"   ) \
     ( test-one-lib "--no-default-features" "--features" "trace,hex,fnv"      ) \
     ( test-one-lib "--no-default-features" "--features" "trace,hex,xxhash"   ) \
     \
-    ( test-one-lib "--no-default-features" "--features" "md5,sha1,sha224,sha256,sha384,sha512,fnv,xxhash"                      ) \
-    ( test-one-lib "--no-default-features" "--features" "md5,sha1,sha224,sha256,sha384,sha512,fnv,xxhash,aggregate"            ) \
+    ( test-one-lib "--no-default-features" "--features" "md5,sha1,sha224,sha256,sha384,sha512,blake3,fnv,xxhash"                      ) \
+    ( test-one-lib "--no-default-features" "--features" "md5,sha1,sha224,sha256,sha384,sha512,blake3,fnv,xxhash,aggregate"            ) \
     \
-    ( test-one-lib "--no-default-features" "--features" "md5,sha1,sha224,sha256,sha384,sha512,fnv,xxhash,hex"                  ) \
-    ( test-one-lib "--no-default-features" "--features" "md5,sha1,sha224,sha256,sha384,sha512,fnv,xxhash,hex,aggregate"        ) \
+    ( test-one-lib "--no-default-features" "--features" "md5,sha1,sha224,sha256,sha384,sha512,blake3,fnv,xxhash,hex"                  ) \
+    ( test-one-lib "--no-default-features" "--features" "md5,sha1,sha224,sha256,sha384,sha512,blake3,fnv,xxhash,hex,aggregate"        ) \
     \
-    ( test-one-lib "--no-default-features" "--features" "md5,sha1,sha224,sha256,sha384,sha512,fnv,xxhash,trace"                ) \
-    ( test-one-lib "--no-default-features" "--features" "md5,sha1,sha224,sha256,sha384,sha512,fnv,xxhash,trace,aggregate"      ) \
+    ( test-one-lib "--no-default-features" "--features" "md5,sha1,sha224,sha256,sha384,sha512,blake3,fnv,xxhash,trace"                ) \
+    ( test-one-lib "--no-default-features" "--features" "md5,sha1,sha224,sha256,sha384,sha512,blake3,fnv,xxhash,trace,aggregate"      ) \
     \
-    ( test-one-lib "--no-default-features" "--features" "md5,sha1,sha224,sha256,sha384,sha512,fnv,xxhash,hex,trace"            ) \
-    ( test-one-lib "--no-default-features" "--features" "md5,sha1,sha224,sha256,sha384,sha512,fnv,xxhash,hex,trace,aggregate"  ) \
+    ( test-one-lib "--no-default-features" "--features" "md5,sha1,sha224,sha256,sha384,sha512,blake3,fnv,xxhash,hex,trace"            ) \
+    ( test-one-lib "--no-default-features" "--features" "md5,sha1,sha224,sha256,sha384,sha512,blake3,fnv,xxhash,hex,trace,aggregate"  ) \
 
 test-ext: build-ext
     ./tests/test-ext.sh
