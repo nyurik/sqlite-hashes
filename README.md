@@ -159,7 +159,7 @@ binary size.
 
 ```toml
 [dependencies]
-sqlite-hashes = { version = "0.9", default-features = false, features = ["hex", "aggregate", "sha256"] }
+sqlite-hashes = { version = "0.10", default-features = false, features = ["hex", "aggregate", "sha256"] }
 ```
 
 * **trace** - enable tracing support, logging all function calls and their arguments
