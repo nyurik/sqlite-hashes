@@ -1,61 +1,123 @@
 #!/usr/bin/env just --justfile
 
-crate_name := 'sqlite-hashes'
-bin_name := 'sqlite_hashes'
-sqlite3 := 'sqlite3'
+CRATE_NAME := 'sqlite-hashes'
+BIN_NAME := 'sqlite_hashes'
+SQLITE3 := 'sqlite3'
+
+# if running in CI, treat warnings as errors by setting RUSTFLAGS and RUSTDOCFLAGS to '-D warnings' unless they are already set
+# Use `CI=true just ci-test` to run the same tests as in GitHub CI.
+# Use `just env-info` to see the current values of RUSTFLAGS and RUSTDOCFLAGS
+export RUSTFLAGS := env('RUSTFLAGS', if env('CI', '') == 'true' {'-D warnings'} else {''})
+export RUSTDOCFLAGS := env('RUSTDOCFLAGS', if env('CI', '') == 'true' {'-D warnings'} else {''})
+export RUST_BACKTRACE := env('RUST_BACKTRACE', if env('CI', '') == 'true' {'1'} else {''})
 
 @_default:
     just --list
+
+# Run benchmarks
+bench:
+    cargo bench
+    open target/criterion/report/index.html
+
+# Run integration tests and save its output as the new expected output
+bless *args:  (cargo-install 'cargo-insta')
+    cargo insta test --accept --unreferenced=auto {{args}}
+
+# Build the project
+build: build-lib build-ext
+
+# Build extension binary
+build-ext *args:
+    cargo build --example {{BIN_NAME}} --no-default-features --features default_loadable_extension {{args}}
+
+# Build the lib
+build-lib:
+    cargo build --workspace --all-targets
+
+# Quick compile without building a binary
+check:
+    cargo check --workspace --all-targets
+
+# Verify that the current version of the crate is not the same as the one published on crates.io
+check-if-published:  (assert 'jq')
+    #!/usr/bin/env bash
+    set -euo pipefail
+    LOCAL_VERSION="$({{just_executable()}} get-crate-field version)"
+    echo "Detected crate version:  '$LOCAL_VERSION'"
+    CRATE_NAME="$({{just_executable()}} get-crate-field name)"
+    echo "Detected crate name:     '$CRATE_NAME'"
+    PUBLISHED_VERSION="$(cargo search ${CRATE_NAME} | grep "^${CRATE_NAME} =" | sed -E 's/.* = "(.*)".*/\1/')"
+    echo "Published crate version: '$PUBLISHED_VERSION'"
+    if [ "$LOCAL_VERSION" = "$PUBLISHED_VERSION" ]; then
+        echo "ERROR: The current crate version has already been published."
+        exit 1
+    else
+        echo "The current crate version has not yet been published."
+    fi
+
+# Quick compile - lib-only
+check-lib:
+    cargo check --workspace
+
+# Generate code coverage report to upload to codecov.io
+ci-coverage: && \
+            (coverage '--codecov --output-path target/llvm-cov/codecov.info')
+    # ATTENTION: the full file path above is used in the CI workflow
+    mkdir -p target/llvm-cov
+
+# Run all tests as expected by CI
+ci-test: env-info test-fmt check clippy test test-ext test-doc
+    #!/usr/bin/env bash
+    set -euo pipefail
+    if [ -n "$(git status --untracked-files --porcelain)" ]; then
+      >&2 echo 'ERROR: git repo is no longer clean. Make sure compilation and tests artifacts are in the .gitignore, and no repo files are modified.'
+      >&2 echo '######### git status ##########'
+      git status
+      exit 1
+    fi
+
+# Run minimal subset of tests to ensure compatibility with MSRV
+ci-test-msrv: env-info check-lib test
 
 # Clean all build artifacts
 clean:
     cargo clean
 
-# Update all dependencies, including breaking changes. Requires nightly toolchain (install with `rustup install nightly`)
-update:
-    cargo +nightly -Z unstable-options update --breaking
-    cargo update
-
-# Find unused dependencies. Install it with `cargo install cargo-udeps`
-udeps:
-    cargo +nightly udeps --all-targets --workspace --all-features
-
-# Check semver compatibility with prior published version. Install it with `cargo install cargo-semver-checks`
-semver *ARGS:
-    cargo semver-checks {{ARGS}}
-
-# Find the minimum supported Rust version (MSRV) using cargo-msrv extension, and update Cargo.toml
-msrv:
-    cargo msrv find --write-msrv --ignore-lockfile
-
-# Get the minimum supported Rust version (MSRV) for the crate
-get-msrv: (get-crate-field "rust_version" crate_name)
-
-# Get any package's field from the metadata
-get-crate-field field package=crate_name:
-    cargo metadata --format-version 1 | jq -r '.packages | map(select(.name == "{{package}}")) | first | .{{field}}'
-
-build: build-lib build-ext
-
-build-lib:
-    cargo build --workspace
-
-build-ext *ARGS:
-    cargo build --example {{bin_name}} --no-default-features --features default_loadable_extension {{ARGS}}
-
-cross-build-ext *ARGS:
-    cross build --example {{bin_name}} --no-default-features --features default_loadable_extension {{ARGS}}
-
-cross-build-ext-aarch64: (cross-build-ext "--target=aarch64-unknown-linux-gnu" "--release")
-
 # Run cargo clippy to lint the code
-clippy *ARGS:
-    cargo clippy --workspace --all-targets {{ARGS}}
-    cargo clippy --no-default-features --features default_loadable_extension {{ARGS}}
+clippy *args:
+    cargo clippy --workspace --all-targets {{args}}
+    cargo clippy --no-default-features --features default_loadable_extension {{args}}
 
-# Test code formatting
-test-fmt:
-    cargo fmt --all -- --check
+# Generate code coverage report
+coverage *args='--no-clean --open':
+    cargo llvm-cov --workspace --all-targets --include-build-script {{args}}
+    # TODO: add test coverage for the loadable extension too, and combine them
+    # cargo llvm-cov --example {{BIN_NAME}} --no-default-features --features default_loadable_extension --codecov --output-path codecov.info
+
+cross-build-ext *args:
+    cross build --example {{BIN_NAME}} --no-default-features --features default_loadable_extension {{args}}
+
+cross-build-ext-aarch64:  (cross-build-ext '--target=aarch64-unknown-linux-gnu' '--release')
+
+cross-test-ext-aarch64:
+    docker run \
+            --rm \
+            -v "$(pwd):/workspace" \
+            -w /workspace \
+            --entrypoint sh \
+            -e EXTENSION_FILE=target/aarch64-unknown-linux-gnu/release/examples/lib{{BIN_NAME}} \
+            --platform linux/arm64 \
+            arm64v8/ubuntu \
+            -c 'apt-get update && apt-get install -y sqlite3 && tests/test-ext.sh'
+
+# Build and open code documentation
+docs:
+    cargo doc --no-deps --open
+
+# Print Rust version information
+env-info:
+    rustc --version
+    cargo --version
 
 # Reformat all code `cargo fmt`. If nightly is available, use it for better results
 fmt:
@@ -69,32 +131,31 @@ fmt:
         cargo fmt --all
     fi
 
-# Build and open code documentation
-docs:
-    cargo doc --no-deps --open
+# Get any package's field from the metadata
+get-crate-field field package=CRATE_NAME:
+    cargo metadata --format-version 1 | jq -r '.packages | map(select(.name == "{{package}}")) | first | .{{field}}'
 
-# Quick compile without building a binary
-check:
-    cargo check --workspace --all-targets
+# Get the minimum supported Rust version (MSRV) for the crate
+get-msrv:  (get-crate-field 'rust_version')
 
-# Quick compile - lib-only
-check-lib:
-    cargo check --workspace
+# Find the minimum supported Rust version (MSRV) using cargo-msrv extension, and update Cargo.toml
+msrv:  (cargo-install 'cargo-msrv')
+    cargo msrv find --write-msrv --ignore-lockfile
 
-# Generate code coverage report
-coverage *ARGS="--no-clean --open":
-    cargo llvm-cov --workspace --all-targets --include-build-script {{ARGS}}
-    # TODO: add test coverage for the loadable extension too, and combine them
-    # cargo llvm-cov --example {{bin_name}} --no-default-features --features default_loadable_extension --codecov --output-path codecov.info
+# Check semver compatibility with prior published version. Install it with `cargo install cargo-semver-checks`
+semver *args:  (cargo-install 'cargo-semver-checks')
+    cargo semver-checks {{args}}
 
-# Generate code coverage report to upload to codecov.io
-ci-coverage: && \
-            (coverage '--codecov --output-path target/llvm-cov/codecov.info')
-    # ATTENTION: the full file path above is used in the CI workflow
-    mkdir -p target/llvm-cov
+# Switch to the minimum rusqlite version
+set-min-rusqlite-version:  (assert "jq")
+    #!/usr/bin/env bash
+    set -euo pipefail
+    MIN_RUSQL_VER="$(grep '^rusqlite =.*version = ">=' Cargo.toml | sed -E 's/.*version = "[^"0-9]*([0-9.-]+).*/\1/')"
+    echo "Switching to minimum rusqlite version: $MIN_RUSQL_VER"
+    cargo update -p rusqlite --precise "$MIN_RUSQL_VER"
 
-# Test the library
-test *ARGS: \
+# Run all unit and integration tests
+test: \
     ( test-one-lib "--no-default-features" "--features" "trace,hex,md5"      ) \
     ( test-one-lib "--no-default-features" "--features" "trace,hex,sha1"     ) \
     ( test-one-lib "--no-default-features" "--features" "trace,hex,sha224"   ) \
@@ -115,107 +176,28 @@ test *ARGS: \
     ( test-one-lib "--no-default-features" "--features" "md5,sha1,sha224,sha256,sha384,sha512,blake3,fnv,xxhash,trace,aggregate"      ) \
     \
     ( test-one-lib "--no-default-features" "--features" "md5,sha1,sha224,sha256,sha384,sha512,blake3,fnv,xxhash,hex,trace"            ) \
-    ( test-one-lib "--no-default-features" "--features" "md5,sha1,sha224,sha256,sha384,sha512,blake3,fnv,xxhash,hex,trace,aggregate"  ) \
-
-test-ext: build-ext
-    ./tests/test-ext.sh
-
-cross-test-ext-aarch64:
-    docker run \
-            --rm \
-            -v "$(pwd):/workspace" \
-            -w /workspace \
-            --entrypoint sh \
-            -e EXTENSION_FILE=target/aarch64-unknown-linux-gnu/release/examples/lib{{bin_name}} \
-            --platform linux/arm64 \
-            arm64v8/ubuntu \
-            -c 'apt-get update && apt-get install -y sqlite3 && tests/test-ext.sh'
-
-[private]
-test-one-lib *ARGS:
-    @echo "### TEST {{ARGS}} #######################################################################################################################"
-    cargo test {{ARGS}}
+    ( test-one-lib "--no-default-features" "--features" "md5,sha1,sha224,sha256,sha384,sha512,blake3,fnv,xxhash,hex,trace,aggregate"  )
 
 # Test documentation
 test-doc:
     cargo test --doc
     cargo doc --no-deps
 
-# Print Rust version information
-@rust-info:
-    rustc --version
-    cargo --version
+test-ext: build-ext
+    ./tests/test-ext.sh
 
-# Run all tests as expected by CI
-ci-test: rust-info test-fmt
-    RUSTFLAGS='-D warnings' {{just_executable()}} check
-    {{just_executable()}} clippy -- -D warnings
-    RUSTFLAGS='-D warnings' {{just_executable()}} test
-    {{just_executable()}} test-ext
-    RUSTDOCFLAGS='-D warnings' {{just_executable()}} test-doc
+# Test code formatting
+test-fmt:
+    cargo fmt --all -- --check
 
-# Run minimal subset of tests to ensure compatibility with MSRV
-ci-test-msrv: rust-info check-lib test
+# Find unused dependencies. Install it with `cargo install cargo-udeps`
+udeps:  (cargo-install 'cargo-udeps')
+    cargo +nightly udeps --all-targets --workspace --all-features
 
-[private]
-is-sqlite3-available:
-    #!/usr/bin/env bash
-    set -euo pipefail
-    if ! command -v {{sqlite3}} > /dev/null; then
-        echo "{{sqlite3}} executable could not be found"
-        exit 1
-    fi
-    echo "Found {{sqlite3}} executable:"
-    {{sqlite3}} --version
-
-# Run integration tests and save its output as the new expected output
-bless *ARGS: (cargo-install "cargo-insta")
-    cargo insta test --accept --unreferenced=auto {{ARGS}}
-
-# Check if a certain Cargo command is installed, and install it if needed
-[private]
-cargo-install $COMMAND $INSTALL_CMD="" *ARGS="":
-    #!/usr/bin/env bash
-    set -euo pipefail
-    if ! command -v $COMMAND > /dev/null; then
-        if ! command -v cargo-binstall > /dev/null; then
-            echo "$COMMAND could not be found. Installing it with    cargo install ${INSTALL_CMD:-$COMMAND} {{ARGS}}"
-            cargo install ${INSTALL_CMD:-$COMMAND} {{ARGS}}
-        else
-            echo "$COMMAND could not be found. Installing it with    cargo binstall ${INSTALL_CMD:-$COMMAND} {{ARGS}}"
-            cargo binstall ${INSTALL_CMD:-$COMMAND} {{ARGS}}
-        fi
-    fi
-
-# Run benchmarks
-bench:
-    cargo bench
-    open target/criterion/report/index.html
-
-# Switch to the minimum rusqlite version
-set-min-rusqlite-version: (assert "jq")
-    #!/usr/bin/env bash
-    set -euo pipefail
-    MIN_RUSQL_VER="$(grep '^rusqlite =.*version = ">=' Cargo.toml | sed -E 's/.*version = "[^"0-9]*([0-9.-]+).*/\1/')"
-    echo "Switching to minimum rusqlite version: $MIN_RUSQL_VER"
-    cargo update -p rusqlite --precise "$MIN_RUSQL_VER"
-
-# Verify that the current version of the crate is not the same as the one published on crates.io
-check-if-published: (assert "jq")
-    #!/usr/bin/env bash
-    set -euo pipefail
-    LOCAL_VERSION="$({{just_executable()}} get-crate-field version)"
-    echo "Detected crate version:  $LOCAL_VERSION"
-    CRATE_NAME="$({{just_executable()}} get-crate-field name)"
-    echo "Detected crate name:     $CRATE_NAME"
-    PUBLISHED_VERSION="$(cargo search ${CRATE_NAME} | grep "^${CRATE_NAME} =" | sed -E 's/.* = "(.*)".*/\1/')"
-    echo "Published crate version: $PUBLISHED_VERSION"
-    if [ "$LOCAL_VERSION" = "$PUBLISHED_VERSION" ]; then
-        echo "ERROR: The current crate version has already been published."
-        exit 1
-    else
-        echo "The current crate version has not yet been published."
-    fi
+# Update all dependencies, including breaking changes. Requires nightly toolchain (install with `rustup install nightly`)
+update:
+    cargo +nightly -Z unstable-options update --breaking
+    cargo update
 
 # Ensure that a certain command is available
 [private]
@@ -224,3 +206,34 @@ assert $COMMAND:
         echo "Command '{{COMMAND}}' could not be found. Please make sure it has been installed on your computer." ;\
         exit 1 ;\
     fi
+
+# Check if a certain Cargo command is installed, and install it if needed
+[private]
+cargo-install $COMMAND $INSTALL_CMD='' *args='':
+    #!/usr/bin/env bash
+    set -euo pipefail
+    if ! command -v $COMMAND > /dev/null; then
+        if ! command -v cargo-binstall > /dev/null; then
+            echo "$COMMAND could not be found. Installing it with    cargo install ${INSTALL_CMD:-$COMMAND} --locked {{args}}"
+            cargo install ${INSTALL_CMD:-$COMMAND} --locked {{args}}
+        else
+            echo "$COMMAND could not be found. Installing it with    cargo binstall ${INSTALL_CMD:-$COMMAND} --locked {{args}}"
+            cargo binstall ${INSTALL_CMD:-$COMMAND} --locked {{args}}
+        fi
+    fi
+
+[private]
+is-sqlite3-available:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    if ! command -v {{SQLITE3}} > /dev/null; then
+        echo "{{SQLITE3}} executable could not be found"
+        exit 1
+    fi
+    echo "Found {{SQLITE3}} executable:"
+    {{SQLITE3}} --version
+
+[private]
+test-one-lib *args:
+    @echo "### TEST {{args}} #######################################################################################################################"
+    cargo test {{args}}
