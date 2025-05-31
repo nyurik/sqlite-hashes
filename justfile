@@ -1,15 +1,16 @@
 #!/usr/bin/env just --justfile
 
-CRATE_NAME := 'sqlite-hashes'
-BIN_NAME := 'sqlite_hashes'
-SQLITE3 := 'sqlite3'
+main_crate := 'sqlite-hashes'
+bin_name := 'sqlite_hashes'
+sqlite3 := 'sqlite3'
 
 # if running in CI, treat warnings as errors by setting RUSTFLAGS and RUSTDOCFLAGS to '-D warnings' unless they are already set
 # Use `CI=true just ci-test` to run the same tests as in GitHub CI.
 # Use `just env-info` to see the current values of RUSTFLAGS and RUSTDOCFLAGS
-export RUSTFLAGS := env('RUSTFLAGS', if env('CI', '') == 'true' {'-D warnings'} else {''})
-export RUSTDOCFLAGS := env('RUSTDOCFLAGS', if env('CI', '') == 'true' {'-D warnings'} else {''})
-export RUST_BACKTRACE := env('RUST_BACKTRACE', if env('CI', '') == 'true' {'1'} else {''})
+ci_mode := if env('CI', '') != '' { '1' } else { '' }
+export RUSTFLAGS := env('RUSTFLAGS', if ci_mode == '1' {'-D warnings'} else {''})
+export RUSTDOCFLAGS := env('RUSTDOCFLAGS', if ci_mode == '1' {'-D warnings'} else {''})
+export RUST_BACKTRACE := env('RUST_BACKTRACE', if ci_mode == '1' {'1'} else {''})
 
 @_default:
     just --list
@@ -21,14 +22,14 @@ bench:
 
 # Run integration tests and save its output as the new expected output
 bless *args:  (cargo-install 'cargo-insta')
-    cargo insta test --accept --unreferenced=auto {{args}}
+    cargo insta test --accept --unreferenced=delete {{args}}
 
 # Build the project
 build: build-lib build-ext
 
 # Build extension binary
 build-ext *args:
-    cargo build --example {{BIN_NAME}} --no-default-features --features default_loadable_extension {{args}}
+    cargo build --example {{bin_name}} --no-default-features --features default_loadable_extension {{args}}
 
 # Build the lib
 build-lib:
@@ -88,14 +89,14 @@ clippy *args:
     cargo clippy --workspace --all-targets {{args}}
     cargo clippy --no-default-features --features default_loadable_extension {{args}}
 
-# Generate code coverage report
-coverage *args='--no-clean --open':
+# Generate code coverage report. Will install `cargo llvm-cov` if missing.
+coverage *args='--no-clean --open':  (cargo-install 'cargo-llvm-cov')
     cargo llvm-cov --workspace --all-targets --include-build-script {{args}}
     # TODO: add test coverage for the loadable extension too, and combine them
-    # cargo llvm-cov --example {{BIN_NAME}} --no-default-features --features default_loadable_extension --codecov --output-path codecov.info
+    # cargo llvm-cov --example {{bin_name}} --no-default-features --features default_loadable_extension --codecov --output-path codecov.info
 
 cross-build-ext *args:
-    cross build --example {{BIN_NAME}} --no-default-features --features default_loadable_extension {{args}}
+    cross build --example {{bin_name}} --no-default-features --features default_loadable_extension {{args}}
 
 cross-build-ext-aarch64:  (cross-build-ext '--target=aarch64-unknown-linux-gnu' '--release')
 
@@ -105,7 +106,7 @@ cross-test-ext-aarch64:
             -v "$(pwd):/workspace" \
             -w /workspace \
             --entrypoint sh \
-            -e EXTENSION_FILE=target/aarch64-unknown-linux-gnu/release/examples/lib{{BIN_NAME}} \
+            -e EXTENSION_FILE=target/aarch64-unknown-linux-gnu/release/examples/lib{{bin_name}} \
             --platform linux/arm64 \
             arm64v8/ubuntu \
             -c 'apt-get update && apt-get install -y sqlite3 && tests/test-ext.sh'
@@ -114,16 +115,21 @@ cross-test-ext-aarch64:
 docs:
     cargo doc --no-deps --open
 
-# Print Rust version information
+# Print environment info
 env-info:
+    @echo "Running {{if ci_mode == '1' {'in CI mode'} else {'in dev mode'} }} on {{os()}} / {{arch()}}"
+    {{just_executable()}} --version
     rustc --version
     cargo --version
+    rustup --version
+    @echo "RUSTFLAGS='$RUSTFLAGS'"
+    @echo "RUSTDOCFLAGS='$RUSTDOCFLAGS'"
 
 # Reformat all code `cargo fmt`. If nightly is available, use it for better results
 fmt:
     #!/usr/bin/env bash
     set -euo pipefail
-    if command -v cargo +nightly &> /dev/null; then
+    if rustup component list --toolchain nightly | grep rustfmt &> /dev/null; then
         echo 'Reformatting Rust code using nightly Rust fmt to sort imports'
         cargo +nightly fmt --all -- --config imports_granularity=Module,group_imports=StdExternalCrate
     else
@@ -132,7 +138,7 @@ fmt:
     fi
 
 # Get any package's field from the metadata
-get-crate-field field package=CRATE_NAME:
+get-crate-field field package=main_crate:
     cargo metadata --format-version 1 | jq -r '.packages | map(select(.name == "{{package}}")) | first | .{{field}}'
 
 # Get the minimum supported Rust version (MSRV) for the crate
@@ -183,6 +189,7 @@ test-doc:
     cargo test --doc
     cargo doc --no-deps
 
+# Test extension by loading it into sqlite and running SQL tests
 test-ext: build-ext
     ./tests/test-ext.sh
 
@@ -201,9 +208,9 @@ update:
 
 # Ensure that a certain command is available
 [private]
-assert $COMMAND:
-    @if ! type "{{COMMAND}}" > /dev/null; then \
-        echo "Command '{{COMMAND}}' could not be found. Please make sure it has been installed on your computer." ;\
+assert command:
+    @if ! type {{command}} > /dev/null; then \
+        echo "Command '{{command}}' could not be found. Please make sure it has been installed on your computer." ;\
         exit 1 ;\
     fi
 
@@ -226,12 +233,12 @@ cargo-install $COMMAND $INSTALL_CMD='' *args='':
 is-sqlite3-available:
     #!/usr/bin/env bash
     set -euo pipefail
-    if ! command -v {{SQLITE3}} > /dev/null; then
-        echo "{{SQLITE3}} executable could not be found"
+    if ! command -v {{sqlite3}} > /dev/null; then
+        echo "{{sqlite3}} executable could not be found"
         exit 1
     fi
-    echo "Found {{SQLITE3}} executable:"
-    {{SQLITE3}} --version
+    echo "Found {{sqlite3}} executable:"
+    {{sqlite3}} --version
 
 [private]
 test-one-lib *args:

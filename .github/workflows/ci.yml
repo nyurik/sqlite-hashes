@@ -47,10 +47,7 @@ jobs:
         with:
           toolchain: ${{ steps.msrv.outputs.value }}
           components: rustfmt
-      - run: just ci-test-msrv
-        env:
-          # Ignore warnings in MSRV. Sadly, this cannot be done inside `just ci-test-msrv`
-          CI: ''
+      - run: just ci_mode=0 ci-test-msrv  # Ignore warnings in MSRV
 
   coverage:
     name: Code Coverage
