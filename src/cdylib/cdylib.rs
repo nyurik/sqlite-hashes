@@ -4,7 +4,10 @@ use rusqlite::ffi::SQLITE_NOTICE;
 use rusqlite::trace::log;
 use rusqlite::{ffi, Connection, Result};
 
-#[allow(clippy::not_unsafe_ptr_arg_deref)]
+/// This is the entry point for the `SQLite` extension.
+///
+/// # Safety
+/// This function is unsafe because it interacts with raw pointers and the `SQLite` C API.
 #[no_mangle]
 pub unsafe extern "C" fn sqlite3_extension_init(
     db: *mut ffi::sqlite3,
@@ -14,6 +17,7 @@ pub unsafe extern "C" fn sqlite3_extension_init(
     Connection::extension_init2(db, pz_err_msg, p_api, extension_init)
 }
 
+#[expect(clippy::needless_pass_by_value)]
 fn extension_init(db: Connection) -> Result<bool> {
     sqlite_hashes::register_hash_functions(&db)?;
     log(SQLITE_NOTICE, "Loaded sqlite_hashes extension");

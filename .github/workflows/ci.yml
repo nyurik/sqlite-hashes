@@ -46,7 +46,6 @@ jobs:
         uses: dtolnay/rust-toolchain@stable
         with:
           toolchain: ${{ steps.msrv.outputs.value }}
-          components: rustfmt
       - run: just ci_mode=0 ci-test-msrv  # Ignore warnings in MSRV
 
   coverage:
@@ -196,7 +195,7 @@ jobs:
   # This approach also allows some jobs to be skipped if they are not needed.
   ci-passed:
     if: always()
-    needs: [ test, test-msrv, coverage, build, cross-build ]
+    needs: [ test, test-msrv, build, cross-build ]
     runs-on: ubuntu-latest
     steps:
       - if: ${{ contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled') }}
