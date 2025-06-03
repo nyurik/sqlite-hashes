@@ -133,7 +133,7 @@ get-crate-field field package=main_crate:
     cargo metadata --format-version 1 | jq -r '.packages | map(select(.name == "{{package}}")) | first | .{{field}}'
 
 # Get the minimum supported Rust version (MSRV) for the crate
-get-msrv:  (get-crate-field 'rust_version')
+get-msrv package=main_crate:  (get-crate-field 'rust_version' package)
 
 # Find the minimum supported Rust version (MSRV) using cargo-msrv extension, and update Cargo.toml
 msrv:  (cargo-install 'cargo-msrv')
@@ -177,7 +177,7 @@ test: \
     cargo test --doc  # do not enable --all-features here as it will cause sqlite runtime errors
 
 # Test documentation generation
-test-doc: (docs '')
+test-doc:  (docs '')
 
 # Test extension by loading it into sqlite and running SQL tests
 test-ext: build-ext
