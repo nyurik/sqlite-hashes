@@ -212,6 +212,7 @@ assert-git-is-clean:
       >&2 echo "ERROR: git repo is no longer clean. Make sure compilation and tests artifacts are in the .gitignore, and no repo files are modified." ;\
       >&2 echo "######### git status ##########" ;\
       git status ;\
+      git --no-pager diff ;\
       exit 1 ;\
     fi
 
