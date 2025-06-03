@@ -82,6 +82,7 @@ clippy *args:
 
 # Generate code coverage report. Will install `cargo llvm-cov` if missing.
 coverage *args='--no-clean --open':  (cargo-install 'cargo-llvm-cov')
+    # do not enable --all-features here as it will cause sqlite runtime errors
     cargo llvm-cov --workspace --all-targets --include-build-script {{args}}
     # TODO: add test coverage for the loadable extension too, and combine them
     # cargo llvm-cov --example {{bin_name}} --no-default-features --features default_loadable_extension --codecov --output-path codecov.info
@@ -133,7 +134,7 @@ get-crate-field field package=main_crate:
     cargo metadata --format-version 1 | jq -r '.packages | map(select(.name == "{{package}}")) | first | .{{field}}'
 
 # Get the minimum supported Rust version (MSRV) for the crate
-get-msrv:  (get-crate-field 'rust_version')
+get-msrv package=main_crate:  (get-crate-field 'rust_version' package)
 
 # Find the minimum supported Rust version (MSRV) using cargo-msrv extension, and update Cargo.toml
 msrv:  (cargo-install 'cargo-msrv')
@@ -177,7 +178,7 @@ test: \
     cargo test --doc  # do not enable --all-features here as it will cause sqlite runtime errors
 
 # Test documentation generation
-test-doc: (docs '')
+test-doc:  (docs '')
 
 # Test extension by loading it into sqlite and running SQL tests
 test-ext: build-ext
@@ -211,6 +212,7 @@ assert-git-is-clean:
       >&2 echo "ERROR: git repo is no longer clean. Make sure compilation and tests artifacts are in the .gitignore, and no repo files are modified." ;\
       >&2 echo "######### git status ##########" ;\
       git status ;\
+      git --no-pager diff ;\
       exit 1 ;\
     fi
 
