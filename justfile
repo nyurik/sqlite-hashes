@@ -82,7 +82,8 @@ clippy *args:
 
 # Generate code coverage report. Will install `cargo llvm-cov` if missing.
 coverage *args='--no-clean --open':  (cargo-install 'cargo-llvm-cov')
-    cargo llvm-cov --workspace --all-targets {{features_flag}} --include-build-script {{args}}
+    # do not enable --all-features here as it will cause sqlite runtime errors
+    cargo llvm-cov --workspace --all-targets --include-build-script {{args}}
     # TODO: add test coverage for the loadable extension too, and combine them
     # cargo llvm-cov --example {{bin_name}} --no-default-features --features default_loadable_extension --codecov --output-path codecov.info
 
