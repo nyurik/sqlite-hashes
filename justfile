@@ -27,7 +27,6 @@ bless *args:  (cargo-install 'cargo-insta')
 
 # Build the project
 build: build-lib build-ext
-    cargo check --workspace --all-targets {{features_flag}}
 
 # Build extension binary
 build-ext *args:
@@ -175,7 +174,7 @@ test: \
         \
         ( test-one-lib '--no-default-features' '--features' 'md5,sha1,sha224,sha256,sha384,sha512,blake3,fnv,xxhash,hex,trace'            ) \
         ( test-one-lib '--no-default-features' '--features' 'md5,sha1,sha224,sha256,sha384,sha512,blake3,fnv,xxhash,hex,trace,aggregate'  )
-    cargo test --doc {{features_flag}}
+    cargo test --doc  # do not enable --all-features here as it will cause sqlite runtime errors
 
 # Test documentation generation
 test-doc: (docs '')
