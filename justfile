@@ -42,14 +42,12 @@ check:
     cargo check --workspace --all-targets {{features_flag}}
 
 # Verify that the current version of the crate is not the same as the one published on crates.io
-check-if-published:  (assert-cmd 'jq')
+check-if-published package=main_crate:  (assert-cmd 'jq')
     #!/usr/bin/env bash
     set -euo pipefail
-    LOCAL_VERSION="$({{just_executable()}} get-crate-field version)"
-    echo "Detected crate version:  '$LOCAL_VERSION'"
-    CRATE_NAME="$({{just_executable()}} get-crate-field name)"
-    echo "Detected crate name:     '$CRATE_NAME'"
-    PUBLISHED_VERSION="$(cargo search ${CRATE_NAME} | grep "^${CRATE_NAME} =" | sed -E 's/.* = "(.*)".*/\1/')"
+    LOCAL_VERSION="$({{just_executable()}} get-crate-field version package)"
+    echo "Detected crate {{package}} version:  '$LOCAL_VERSION'"
+    PUBLISHED_VERSION="$(cargo search --quiet {{package}} | grep "^{{package}} =" | sed -E 's/.* = "(.*)".*/\1/')"
     echo "Published crate version: '$PUBLISHED_VERSION'"
     if [ "$LOCAL_VERSION" = "$PUBLISHED_VERSION" ]; then
         echo "ERROR: The current crate version has already been published."
@@ -106,8 +104,8 @@ cross-test-ext-aarch64:
             -c 'apt-get update && apt-get install -y sqlite3 && tests/test-ext.sh'
 
 # Build and open code documentation
-docs:
-    cargo doc --no-deps --open
+docs *args='--open':
+    DOCS_RS=1 cargo doc --no-deps {{args}} --workspace {{features_flag}}
 
 # Print environment info
 env-info:
@@ -156,32 +154,31 @@ set-min-rusqlite-version:  (assert-cmd 'jq')
 
 # Run all unit and integration tests
 test: \
-    ( test-one-lib '--no-default-features' '--features' 'trace,hex,md5'      ) \
-    ( test-one-lib '--no-default-features' '--features' 'trace,hex,sha1'     ) \
-    ( test-one-lib '--no-default-features' '--features' 'trace,hex,sha224'   ) \
-    ( test-one-lib '--no-default-features' '--features' 'trace,hex,sha256'   ) \
-    ( test-one-lib '--no-default-features' '--features' 'trace,hex,sha384'   ) \
-    ( test-one-lib '--no-default-features' '--features' 'trace,hex,sha512'   ) \
-    ( test-one-lib '--no-default-features' '--features' 'trace,hex,blake3'   ) \
-    ( test-one-lib '--no-default-features' '--features' 'trace,hex,fnv'      ) \
-    ( test-one-lib '--no-default-features' '--features' 'trace,hex,xxhash'   ) \
-    \
-    ( test-one-lib '--no-default-features' '--features' 'md5,sha1,sha224,sha256,sha384,sha512,blake3,fnv,xxhash'                      ) \
-    ( test-one-lib '--no-default-features' '--features' 'md5,sha1,sha224,sha256,sha384,sha512,blake3,fnv,xxhash,aggregate'            ) \
-    \
-    ( test-one-lib '--no-default-features' '--features' 'md5,sha1,sha224,sha256,sha384,sha512,blake3,fnv,xxhash,hex'                  ) \
-    ( test-one-lib '--no-default-features' '--features' 'md5,sha1,sha224,sha256,sha384,sha512,blake3,fnv,xxhash,hex,aggregate'        ) \
-    \
-    ( test-one-lib '--no-default-features' '--features' 'md5,sha1,sha224,sha256,sha384,sha512,blake3,fnv,xxhash,trace'                ) \
-    ( test-one-lib '--no-default-features' '--features' 'md5,sha1,sha224,sha256,sha384,sha512,blake3,fnv,xxhash,trace,aggregate'      ) \
-    \
-    ( test-one-lib '--no-default-features' '--features' 'md5,sha1,sha224,sha256,sha384,sha512,blake3,fnv,xxhash,hex,trace'            ) \
-    ( test-one-lib '--no-default-features' '--features' 'md5,sha1,sha224,sha256,sha384,sha512,blake3,fnv,xxhash,hex,trace,aggregate'  )
+        ( test-one-lib '--no-default-features' '--features' 'trace,hex,md5'      ) \
+        ( test-one-lib '--no-default-features' '--features' 'trace,hex,sha1'     ) \
+        ( test-one-lib '--no-default-features' '--features' 'trace,hex,sha224'   ) \
+        ( test-one-lib '--no-default-features' '--features' 'trace,hex,sha256'   ) \
+        ( test-one-lib '--no-default-features' '--features' 'trace,hex,sha384'   ) \
+        ( test-one-lib '--no-default-features' '--features' 'trace,hex,sha512'   ) \
+        ( test-one-lib '--no-default-features' '--features' 'trace,hex,blake3'   ) \
+        ( test-one-lib '--no-default-features' '--features' 'trace,hex,fnv'      ) \
+        ( test-one-lib '--no-default-features' '--features' 'trace,hex,xxhash'   ) \
+        \
+        ( test-one-lib '--no-default-features' '--features' 'md5,sha1,sha224,sha256,sha384,sha512,blake3,fnv,xxhash'                      ) \
+        ( test-one-lib '--no-default-features' '--features' 'md5,sha1,sha224,sha256,sha384,sha512,blake3,fnv,xxhash,aggregate'            ) \
+        \
+        ( test-one-lib '--no-default-features' '--features' 'md5,sha1,sha224,sha256,sha384,sha512,blake3,fnv,xxhash,hex'                  ) \
+        ( test-one-lib '--no-default-features' '--features' 'md5,sha1,sha224,sha256,sha384,sha512,blake3,fnv,xxhash,hex,aggregate'        ) \
+        \
+        ( test-one-lib '--no-default-features' '--features' 'md5,sha1,sha224,sha256,sha384,sha512,blake3,fnv,xxhash,trace'                ) \
+        ( test-one-lib '--no-default-features' '--features' 'md5,sha1,sha224,sha256,sha384,sha512,blake3,fnv,xxhash,trace,aggregate'      ) \
+        \
+        ( test-one-lib '--no-default-features' '--features' 'md5,sha1,sha224,sha256,sha384,sha512,blake3,fnv,xxhash,hex,trace'            ) \
+        ( test-one-lib '--no-default-features' '--features' 'md5,sha1,sha224,sha256,sha384,sha512,blake3,fnv,xxhash,hex,trace,aggregate'  )
+    cargo test --doc {{features_flag}}
 
-# Test documentation
-test-doc:
-    cargo test --doc
-    cargo doc --no-deps
+# Test documentation generation
+test-doc: (docs '')
 
 # Test extension by loading it into sqlite and running SQL tests
 test-ext: build-ext
