@@ -41,7 +41,7 @@ check:
     cargo check --workspace --all-targets {{features_flag}}
 
 # Verify that the current version of the crate is not the same as the one published on crates.io
-check-if-published package=main_crate:  (assert-cmd 'jq')
+check-if-published package=main_crate:
     #!/usr/bin/env bash
     set -euo pipefail
     LOCAL_VERSION="$({{just_executable()}} get-crate-field version {{package}})"
@@ -130,7 +130,7 @@ fmt:
     fi
 
 # Get any package's field from the metadata
-get-crate-field field package=main_crate:
+get-crate-field field package=main_crate:  (assert-cmd 'jq')
     cargo metadata --format-version 1 | jq -e -r '.packages | map(select(.name == "{{package}}")) | first | .{{field}} | select(. != null)'
 
 # Get the minimum supported Rust version (MSRV) for the crate
@@ -145,7 +145,7 @@ semver *args:  (cargo-install 'cargo-semver-checks')
     cargo semver-checks {{features_flag}} {{args}}
 
 # Switch to the minimum rusqlite version
-set-min-rusqlite-version:  (assert-cmd 'jq')
+set-min-rusqlite-version:
     #!/usr/bin/env bash
     set -euo pipefail
     MIN_RUSQL_VER="$(grep '^rusqlite =.*version = ">=' Cargo.toml | sed -E 's/.*version = "[^"0-9]*([0-9.-]+).*/\1/')"
