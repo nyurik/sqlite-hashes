@@ -1,9 +1,9 @@
 # sqlite-hashes
 
 [![GitHub](https://img.shields.io/badge/github-sqlite--hashes-8da0cb?logo=github)](https://github.com/nyurik/sqlite-hashes)
-[![crates.io version](https://img.shields.io/crates/v/sqlite-hashes.svg)](https://crates.io/crates/sqlite-hashes)
-[![docs.rs docs](https://docs.rs/sqlite-hashes/badge.svg)](https://docs.rs/sqlite-hashes)
-[![license](https://img.shields.io/crates/l/sqlite-hashes.svg)](https://github.com/nyurik/sqlite-hashes/blob/main/LICENSE-APACHE)
+[![license](https://img.shields.io/crates/v/sqlite-hashes.svg)](https://crates.io/crates/sqlite-hashes)
+[![docs.rs](https://img.shields.io/docsrs/sqlite-hashes)](https://docs.rs/sqlite-hashes)
+[![license](https://img.shields.io/crates/l/sqlite-hashes)](https://github.com/nyurik/sqlite-hashes/blob/main/LICENSE-APACHE)
 [![CI build](https://github.com/nyurik/sqlite-hashes/actions/workflows/ci.yml/badge.svg)](https://github.com/nyurik/sqlite-hashes/actions)
 [![Codecov](https://img.shields.io/codecov/c/github/nyurik/sqlite-hashes)](https://app.codecov.io/gh/nyurik/sqlite-hashes)
 
