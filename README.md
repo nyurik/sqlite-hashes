@@ -1,10 +1,10 @@
 # sqlite-hashes
 
-[![GitHub](https://img.shields.io/badge/github-sqlite--hashes-8da0cb?logo=github)](https://github.com/nyurik/sqlite-hashes)
-[![license](https://img.shields.io/crates/v/sqlite-hashes.svg)](https://crates.io/crates/sqlite-hashes)
-[![docs.rs](https://img.shields.io/docsrs/sqlite-hashes)](https://docs.rs/sqlite-hashes)
-[![license](https://img.shields.io/crates/l/sqlite-hashes)](https://github.com/nyurik/sqlite-hashes/blob/main/LICENSE-APACHE)
-[![CI build](https://github.com/nyurik/sqlite-hashes/actions/workflows/ci.yml/badge.svg)](https://github.com/nyurik/sqlite-hashes/actions)
+[![GitHub repo](https://img.shields.io/badge/github-sqlite--hashes-8da0cb?logo=github)](https://github.com/nyurik/sqlite-hashes)
+[![crates.io license](https://img.shields.io/crates/v/sqlite-hashes.svg)](https://crates.io/crates/sqlite-hashes)
+[![docs.rs status](https://img.shields.io/docsrs/sqlite-hashes)](https://docs.rs/sqlite-hashes)
+[![crates.io license](https://img.shields.io/crates/l/sqlite-hashes)](https://github.com/nyurik/sqlite-hashes/blob/main/LICENSE-APACHE)
+[![CI build status](https://github.com/nyurik/sqlite-hashes/actions/workflows/ci.yml/badge.svg)](https://github.com/nyurik/sqlite-hashes/actions)
 [![Codecov](https://img.shields.io/codecov/c/github/nyurik/sqlite-hashes)](https://app.codecov.io/gh/nyurik/sqlite-hashes)
 
 Implement `SQLite` hashing functions with aggregation support, including MD5, SHA1, SHA224, SHA256, SHA384, SHA512,
