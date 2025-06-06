@@ -1,5 +1,6 @@
 [package]
 name = "sqlite-hashes"
+# !!! This value is also used in the README.md
 version = "0.10.2"
 description = "Hashing functions for SQLite with aggregation support: MD5, SHA1, SHA256, SHA512, Blake3, FNV-1a, xxHash"
 authors = ["Yuri Astrakhan <YuriAstrakhan@gmail.com>"]
