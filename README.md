@@ -2,6 +2,7 @@
 
 [![GitHub repo](https://img.shields.io/badge/github-sqlite--hashes-8da0cb?logo=github)](https://github.com/nyurik/sqlite-hashes)
 [![crates.io version](https://img.shields.io/crates/v/sqlite-hashes.svg)](https://crates.io/crates/sqlite-hashes)
+[![crate usage](https://img.shields.io/crates/d/sqlite-hashes)](https://crates.io/crates/sqlite-hashes)
 [![docs.rs status](https://img.shields.io/docsrs/sqlite-hashes)](https://docs.rs/sqlite-hashes)
 [![crates.io license](https://img.shields.io/crates/l/sqlite-hashes)](https://github.com/nyurik/sqlite-hashes/blob/main/LICENSE-APACHE)
 [![CI build status](https://github.com/nyurik/sqlite-hashes/actions/workflows/ci.yml/badge.svg)](https://github.com/nyurik/sqlite-hashes/actions)
