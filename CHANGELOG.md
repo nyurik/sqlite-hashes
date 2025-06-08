@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Other
 
 - remove default ci perms
+- update dependencies
 
 ## [0.10.5](https://github.com/nyurik/sqlite-hashes/compare/v0.10.4...v0.10.5) - 2025-06-08
 
