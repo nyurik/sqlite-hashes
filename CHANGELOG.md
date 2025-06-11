@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.10.7](https://github.com/nyurik/sqlite-hashes/compare/v0.10.6...v0.10.7) - 2025-06-11
+
+### Other
+
+- use release-plz token in dependabot ci
+- Bump noncrypto-digests from 0.3.5 to 0.3.6 in the all-cargo-version-updates group ([#103](https://github.com/nyurik/sqlite-hashes/pull/103))
+
 ## [0.10.6](https://github.com/nyurik/sqlite-hashes/compare/v0.10.5...v0.10.6) - 2025-06-08
 
 ### Other
