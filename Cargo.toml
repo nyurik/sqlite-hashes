@@ -73,8 +73,8 @@ sha2 = { version = "0.10.9", optional = true }
 noncrypto-digests = { version = "0.3.6", optional = true }
 
 [dev-dependencies]
-criterion = { version = "0.6", features = ["html_reports"] }
-ctor = "0.4"
+criterion = { version = "0.7", features = ["html_reports"] }
+ctor = "0.5"
 env_logger = "0.11"
 insta = { version = "1", features = [] }
 
