@@ -1,9 +1,12 @@
 #!/usr/bin/env just --justfile
 
-main_crate := 'sqlite-hashes'
-features_flag := '--all-features'
+main_crate := file_name(justfile_directory())
 bin_name := snakecase(main_crate)
 sqlite3 := 'sqlite3'
+
+packages := '--workspace'  # All crates in the workspace
+features := '--all-features'  # Enable all features
+targets := '--all-targets'  # For all targets (lib, bin, tests, examples, benches)
 
 # if running in CI, treat warnings as errors by setting RUSTFLAGS and RUSTDOCFLAGS to '-D warnings' unless they are already set
 # Use `CI=true just ci-test` to run the same tests as in GitHub CI.
@@ -37,15 +40,15 @@ build-ext *args:
 
 # Build the lib
 build-lib:
-    cargo build --workspace
+    cargo build {{packages}}
 
 # Quick compile without building a binary
 check:
-    cargo check --workspace --all-targets {{features_flag}}
+    cargo check {{packages}} {{features}} {{targets}}
 
 # Quick compile - lib-only
 check-lib:
-    cargo check --workspace
+    cargo check {{packages}}
 
 # Generate code coverage report to upload to codecov.io
 ci-coverage: env-info && \
@@ -65,13 +68,13 @@ clean:
 
 # Run cargo clippy to lint the code
 clippy *args:
-    cargo clippy --workspace --all-targets {{features_flag}} {{args}}
+    cargo clippy {{packages}} {{features}} {{targets}} {{args}}
     cargo clippy --no-default-features --features default_loadable_extension {{args}}
 
 # Generate code coverage report. Will install `cargo llvm-cov` if missing.
 coverage *args='--no-clean --open':  (cargo-install 'cargo-llvm-cov')
     # do not enable --all-features here as it will cause sqlite runtime errors
-    cargo llvm-cov --workspace --all-targets --include-build-script {{args}}
+    cargo llvm-cov {{packages}} {{targets}} --include-build-script {{args}}
     # TODO: add test coverage for the loadable extension too, and combine them
     # cargo llvm-cov --example {{bin_name}} --no-default-features --features default_loadable_extension --codecov --output-path codecov.info
 
@@ -93,11 +96,11 @@ cross-test-ext-aarch64:
 
 # Build and open code documentation
 docs *args='--open':
-    DOCS_RS=1 cargo doc --no-deps {{args}} --workspace {{features_flag}}
+    DOCS_RS=1 cargo doc --no-deps {{args}} {{packages}} {{features}}
 
 # Print environment info
 env-info:
-    @echo "Running {{if ci_mode == '1' {'in CI mode'} else {'in dev mode'} }} on {{os()}} / {{arch()}}"
+    @echo "Running for '{{main_crate}}' crate {{if ci_mode == '1' {'in CI mode'} else {'in dev mode'} }} on {{os()}} / {{arch()}}"
     @echo "PWD $(pwd)"
     {{just_executable()}} --version
     rustc --version
@@ -121,7 +124,7 @@ fmt:
 
 # Reformat all Cargo.toml files using cargo-sort
 fmt-toml *args:  (cargo-install 'cargo-sort')
-    cargo sort --workspace --grouped {{args}}
+    cargo sort {{packages}} --grouped {{args}}
 
 # Get any package's field from the metadata
 get-crate-field field package=main_crate:  (assert-cmd 'jq')
@@ -140,7 +143,7 @@ release *args='':  (cargo-install 'release-plz')
 
 # Check semver compatibility with prior published version. Install it with `cargo install cargo-semver-checks`
 semver *args:  (cargo-install 'cargo-semver-checks')
-    cargo semver-checks {{features_flag}} {{args}}
+    cargo semver-checks {{features}} {{args}}
 
 # Switch to the minimum rusqlite version
 set-min-rusqlite-version:
@@ -188,7 +191,7 @@ test-fmt: && (fmt-toml '--check' '--check-format')
 
 # Find unused dependencies. Install it with `cargo install cargo-udeps`
 udeps:  (cargo-install 'cargo-udeps')
-    cargo +nightly udeps --workspace --all-targets {{features_flag}}
+    cargo +nightly udeps {{packages}} {{features}} {{targets}}
 
 # Update all dependencies, including breaking changes. Requires nightly toolchain (install with `rustup install nightly`)
 update:
