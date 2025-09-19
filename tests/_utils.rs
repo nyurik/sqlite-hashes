@@ -2,7 +2,8 @@
 #![allow(
     clippy::missing_panics_doc,
     clippy::must_use_candidate,
-    clippy::new_without_default
+    clippy::new_without_default,
+    clippy::unwrap_used
 )]
 
 use std::fmt::Write as _;
