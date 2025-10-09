@@ -93,7 +93,7 @@ xxhash = [
 [dependencies]
 blake3 = { version = "1.8.2", features = ["traits-preview"], optional = true }
 hex = { version = "0.4", optional = true }
-log = { version = "0.4.27", optional = true }
+log = { version = "0.4.28", optional = true }
 
 # There are multiple versions that could work, but sqlx requires a specific one, so don't limit it here
 # Note that cdylib requires >= 0.32.0 (controlled by the lock file)
@@ -109,7 +109,7 @@ sha2 = { version = "0.10.9", optional = true }
 
 [dev-dependencies]
 criterion = { version = "0.7", features = ["html_reports"] }
-ctor = "0.5"
+ctor = "0.6"
 env_logger = "0.11"
 insta = { version = "1", features = [] }
 
