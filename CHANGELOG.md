@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.10.8](https://github.com/nyurik/sqlite-hashes/compare/v0.10.7...v0.10.8) - 2025-11-10
+
+### Other
+
+- update lock file
+- minor justfile adjustments
+
 ## [0.10.7](https://github.com/nyurik/sqlite-hashes/compare/v0.10.6...v0.10.7) - 2025-10-10
 
 ### Other
