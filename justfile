@@ -1,26 +1,26 @@
 #!/usr/bin/env just --justfile
 
+# Define the name of the main crate based
 main_crate := file_name(justfile_directory())
+# How to call the current just executable. Note that just_executable() may have `\` in Windows paths, so we need to quote it.
+just := quote(just_executable())
+# Define the name of the extension binary
 bin_name := snakecase(main_crate)
+# Allow override of the sqlite3 executable name
 sqlite3 := 'sqlite3'
-
-packages := '--workspace'  # All crates in the workspace
-features := '--all-features'  # Enable all features
-targets := '--all-targets'  # For all targets (lib, bin, tests, examples, benches)
+# cargo-binstall needs a workaround due to caching when used in CI
+binstall_args := if env('CI', '') != '' {'--no-confirm --no-track --disable-telemetry'} else {''}
 
 # if running in CI, treat warnings as errors by setting RUSTFLAGS and RUSTDOCFLAGS to '-D warnings' unless they are already set
 # Use `CI=true just ci-test` to run the same tests as in GitHub CI.
 # Use `just env-info` to see the current values of RUSTFLAGS and RUSTDOCFLAGS
 ci_mode := if env('CI', '') != '' {'1'} else {''}
-# cargo-binstall needs a workaround due to caching
-# ci_mode might be manually set by user, so re-check the env var
-binstall_args := if env('CI', '') != '' {'--no-confirm --no-track --disable-telemetry'} else {''}
 export RUSTFLAGS := env('RUSTFLAGS', if ci_mode == '1' {'-D warnings'} else {''})
 export RUSTDOCFLAGS := env('RUSTDOCFLAGS', if ci_mode == '1' {'-D warnings'} else {''})
 export RUST_BACKTRACE := env('RUST_BACKTRACE', if ci_mode == '1' {'1'} else {'0'})
 
 @_default:
-    {{quote(just_executable())}} --list
+    {{just}} --list
 
 # Run benchmarks
 bench:
@@ -40,15 +40,15 @@ build-ext *args:
 
 # Build the lib
 build-lib:
-    cargo build {{packages}}
+    cargo build --workspace
 
 # Quick compile without building a binary
 check:
-    cargo check {{packages}} {{features}} {{targets}}
+    cargo check --workspace --all-features --all-targets
 
 # Quick compile - lib-only
 check-lib:
-    cargo check {{packages}}
+    cargo check --workspace
 
 # Generate code coverage report to upload to codecov.io
 ci-coverage: env-info && \
@@ -68,13 +68,13 @@ clean:
 
 # Run cargo clippy to lint the code
 clippy *args:
-    cargo clippy {{packages}} {{features}} {{targets}} {{args}}
+    cargo clippy --workspace --all-features --all-targets {{args}}
     cargo clippy --no-default-features --features default_loadable_extension {{args}}
 
 # Generate code coverage report. Will install `cargo llvm-cov` if missing.
 coverage *args='--no-clean --open':  (cargo-install 'cargo-llvm-cov')
     # do not enable --all-features here as it will cause sqlite runtime errors
-    cargo llvm-cov {{packages}} {{targets}} --include-build-script {{args}}
+    cargo llvm-cov --workspace --all-targets --include-build-script {{args}}
     # TODO: add test coverage for the loadable extension too, and combine them
     # cargo llvm-cov --example {{bin_name}} --no-default-features --features default_loadable_extension --codecov --output-path codecov.info
 
@@ -96,13 +96,13 @@ cross-test-ext-aarch64:
 
 # Build and open code documentation
 docs *args='--open':
-    DOCS_RS=1 cargo doc --no-deps {{args}} {{packages}} {{features}}
+    DOCS_RS=1 cargo doc --no-deps {{args}} --workspace --all-features
 
 # Print environment info
 env-info:
     @echo "Running for '{{main_crate}}' crate {{if ci_mode == '1' {'in CI mode'} else {'in dev mode'} }} on {{os()}} / {{arch()}}"
     @echo "PWD $(pwd)"
-    {{quote(just_executable())}} --version
+    {{just}} --version
     rustc --version
     cargo --version
     rustup --version
@@ -124,9 +124,9 @@ fmt:
 
 # Reformat all Cargo.toml files using cargo-sort
 fmt-toml *args:  (cargo-install 'cargo-sort')
-    cargo sort {{packages}} --grouped {{args}}
+    cargo sort --workspace --grouped {{args}}
 
-# Get any package's field from the metadata
+# Get a package field from the metadata
 get-crate-field field package=main_crate:  (assert-cmd 'jq')
     cargo metadata --format-version 1 | jq -e -r '.packages | map(select(.name == "{{package}}")) | first | .{{field}} // error("Field \"{{field}}\" is missing in Cargo.toml for package {{package}}")'
 
@@ -143,7 +143,7 @@ release *args='':  (cargo-install 'release-plz')
 
 # Check semver compatibility with prior published version. Install it with `cargo install cargo-semver-checks`
 semver *args:  (cargo-install 'cargo-semver-checks')
-    cargo semver-checks {{features}} {{args}}
+    cargo semver-checks --all-features {{args}}
 
 # Switch to the minimum rusqlite version
 set-min-rusqlite-version:
@@ -189,9 +189,9 @@ test-ext: build-ext
 test-fmt: && (fmt-toml '--check' '--check-format')
     cargo fmt --all -- --check
 
-# Find unused dependencies. Install it with `cargo install cargo-udeps`
+# Find unused dependencies. Uses `cargo-udeps`
 udeps:  (cargo-install 'cargo-udeps')
-    cargo +nightly udeps {{packages}} {{features}} {{targets}}
+    cargo +nightly udeps --workspace --all-features --all-targets
 
 # Update all dependencies, including breaking changes. Requires nightly toolchain (install with `rustup install nightly`)
 update:
