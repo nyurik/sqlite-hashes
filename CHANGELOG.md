@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.10.9](https://github.com/nyurik/sqlite-hashes/compare/v0.10.8...v0.10.9) - 2025-12-01
+
+### Other
+
+- add .editorconfig
+- minor justfile adjustments
+- Bump insta from 1.44.1 to 1.44.3 in the all-cargo-version-updates group ([#119](https://github.com/nyurik/sqlite-hashes/pull/119))
+- *(CI)* add GH_TOKEN to dependabot approval
+- Bump insta from 1.43.2 to 1.44.1 in the all-cargo-version-updates group ([#116](https://github.com/nyurik/sqlite-hashes/pull/116))
+- Bump actions/checkout from 5 to 6 in the all-actions-version-updates group ([#117](https://github.com/nyurik/sqlite-hashes/pull/117))
+
 ## [0.10.8](https://github.com/nyurik/sqlite-hashes/compare/v0.10.7...v0.10.8) - 2025-11-10
 
 ### Other
