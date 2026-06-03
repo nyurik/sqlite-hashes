@@ -91,9 +91,9 @@ xxhash = [
 ]
 
 [dependencies]
-blake3 = { version = "1.8.2", features = ["traits-preview"], optional = true }
+blake3 = { version = "1.8.5", features = ["traits-preview"], optional = true }
 hex = { version = "0.4", optional = true }
-log = { version = "0.4.28", optional = true }
+log = { version = "0.4.31", optional = true }
 
 # There are multiple versions that could work, but sqlx requires a specific one, so don't limit it here
 # Note that cdylib requires >= 0.32.0 (controlled by the lock file)
@@ -101,11 +101,11 @@ log = { version = "0.4.28", optional = true }
 rusqlite = { version = ">=0.30.0", features = ["functions"] }
 
 # Digest and all hashing algorithms are using the same crates internally, so should be kept in sync
-digest = "0.10.7"
-md-5 = { version = "0.10.6", optional = true }
-noncrypto-digests = { version = "0.3.6", optional = true }
-sha1 = { version = "0.10.6", optional = true }
-sha2 = { version = "0.10.9", optional = true }
+digest = "0.11.3"
+md-5 = { version = "0.11.0", optional = true }
+noncrypto-digests = { version = "0.3.7", optional = true }
+sha1 = { version = "0.11.0", optional = true }
+sha2 = { version = "0.11.0", optional = true }
 
 [dev-dependencies]
 criterion = { version = "0.7", features = ["html_reports"] }
@@ -127,6 +127,7 @@ pedantic = { level = "warn", priority = -1 }
 missing_errors_doc = "allow"
 module_name_repetitions = "allow"
 
-#[patch.crates-io]
+[patch.crates-io]
+noncrypto-digests = { path = "../noncrypto-digests-jkr" }
 #rusqlite = { path = "../rusqlite" }
 #libsqlite3-sys = { path = "../rusqlite/libsqlite3-sys" }
