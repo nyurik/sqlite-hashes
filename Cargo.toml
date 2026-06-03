@@ -128,6 +128,7 @@ missing_errors_doc = "allow"
 module_name_repetitions = "allow"
 
 [patch.crates-io]
-noncrypto-digests = { path = "../noncrypto-digests-jkr" }
+# use git repo (temp) gotta remove once thing w/ noncrypto-digests is published
+noncrypto-digests = { git = "https://github.com/jessekrubin/noncrypto-digests.git" }
 #rusqlite = { path = "../rusqlite" }
 #libsqlite3-sys = { path = "../rusqlite/libsqlite3-sys" }
