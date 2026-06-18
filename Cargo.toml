@@ -9,7 +9,7 @@ edition = "2021"
 license = "MIT OR Apache-2.0"
 keywords = ["sqlite", "rusqlite", "hash", "md5", "sha256"]
 categories = ["database", "cryptography"]
-rust-version = "1.82"
+rust-version = "1.85"
 
 [lib]
 name = "sqlite_hashes"
@@ -91,7 +91,7 @@ xxhash = [
 ]
 
 [dependencies]
-blake3 = { version = "1.8.2", features = ["traits-preview"], optional = true }
+blake3 = { version = "1.8.4", features = ["traits-preview"], optional = true }
 hex = { version = "0.4", optional = true }
 log = { version = "0.4.28", optional = true }
 
