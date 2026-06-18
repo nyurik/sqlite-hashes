@@ -101,15 +101,15 @@ log = { version = "0.4.28", optional = true }
 rusqlite = { version = ">=0.30.0", features = ["functions"] }
 
 # Digest and all hashing algorithms are using the same crates internally, so should be kept in sync
-digest = "0.10.7"
-md-5 = { version = "0.10.6", optional = true }
-noncrypto-digests = { version = "0.3.6", optional = true }
-sha1 = { version = "0.10.6", optional = true }
-sha2 = { version = "0.10.9", optional = true }
+digest = "0.11.3"
+md-5 = { version = "0.11.0", optional = true }
+noncrypto-digests = { version = "0.4.0", optional = true }
+sha1 = { version = "0.11.0", optional = true }
+sha2 = { version = "0.11.0", optional = true }
 
 [dev-dependencies]
-criterion = { version = "0.7", features = ["html_reports"] }
-ctor = "0.6"
+criterion = { version = "0.8", features = ["html_reports"] }
+ctor = "1.0"
 env_logger = "0.11"
 insta = { version = "1", features = [] }
 
@@ -126,6 +126,7 @@ cargo = { level = "warn", priority = -1 }
 pedantic = { level = "warn", priority = -1 }
 missing_errors_doc = "allow"
 module_name_repetitions = "allow"
+multiple_crate_versions = "allow"
 
 #[patch.crates-io]
 #rusqlite = { path = "../rusqlite" }
