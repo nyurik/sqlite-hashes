@@ -3,14 +3,14 @@
 main_crate := 'sqlite-hashes'
 # How to call the current just executable. Note that just_executable() may have `\` in Windows paths, so we need to quote it.
 just := quote(just_executable())
-# Define the name of the extension binary
-bin_name := snakecase(main_crate)
-# Allow override of the sqlite3 executable name
-sqlite3 := 'sqlite3'
 # cargo-binstall needs a workaround due to caching when used in CI
 binstall_args := if env('CI', '') != '' {'--no-confirm --no-track --disable-telemetry'} else {''}
 # location of the coverage output, used by CI
 coverage_lcov := 'target/llvm-cov/lcov.info'
+# Define the name of the extension binary
+bin_name := snakecase(main_crate)
+# Allow override of the sqlite3 executable name
+sqlite3 := 'sqlite3'
 
 # if running in CI, treat warnings as errors by setting RUSTFLAGS and RUSTDOCFLAGS to '-D warnings' unless they are already set
 # Use `CI=true just ci-test` to run the same tests as in GitHub CI.
