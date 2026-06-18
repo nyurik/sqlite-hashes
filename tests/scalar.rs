@@ -5,7 +5,8 @@
 mod utils;
 use crate::utils::Conn;
 
-#[ctor::ctor]
+// SAFETY: This test-only initializer only attempts to initialize env_logger; failures (already initialized) are ignored.
+#[ctor::ctor(unsafe)]
 fn init() {
     let _ = env_logger::builder().is_test(true).try_init();
 }
