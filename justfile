@@ -1,7 +1,6 @@
 #!/usr/bin/env just --justfile
 
-# Define the name of the main crate based
-main_crate := file_name(justfile_directory())
+main_crate := 'sqlite-hashes'
 # How to call the current just executable. Note that just_executable() may have `\` in Windows paths, so we need to quote it.
 just := quote(just_executable())
 # Define the name of the extension binary
@@ -10,6 +9,8 @@ bin_name := snakecase(main_crate)
 sqlite3 := 'sqlite3'
 # cargo-binstall needs a workaround due to caching when used in CI
 binstall_args := if env('CI', '') != '' {'--no-confirm --no-track --disable-telemetry'} else {''}
+# location of the coverage output, used by CI
+coverage_lcov := 'target/llvm-cov/lcov.info'
 
 # if running in CI, treat warnings as errors by setting RUSTFLAGS and RUSTDOCFLAGS to '-D warnings' unless they are already set
 # Use `CI=true just ci-test` to run the same tests as in GitHub CI.
@@ -46,21 +47,23 @@ build-lib:
 check:
     cargo check --workspace --all-features --all-targets
 
-# Quick compile - lib-only
-check-lib:
-    cargo check --workspace
-
-# Generate code coverage report to upload to codecov.io
+# Generate LCOV coverage report for CI to upload to codecov.io
 ci-coverage: env-info && \
-            (coverage '--codecov --output-path target/llvm-cov/codecov.info')
-    # ATTENTION: the full file path above is used in the CI workflow
-    mkdir -p target/llvm-cov
+        (_coverage '--lcov' '--output-path' coverage_lcov)
+    rm -rf {{quote(parent_directory(coverage_lcov))}}
+    mkdir -p {{quote(parent_directory(coverage_lcov))}}
 
 # Run all tests as expected by CI
 ci-test: env-info test-fmt check clippy test test-ext test-doc && assert-git-is-clean
 
-# Run minimal subset of tests to ensure compatibility with MSRV
-ci-test-msrv: env-info check-lib test
+# Compile default features with minimal dependencies on the configured MSRV
+ci-test-msrv:
+    {{just}} ci_mode=0 env-info _check-msrv-default
+    {{just}} assert-git-is-clean
+
+# Set toolchain and run ci-test-msrv
+ci-test-msrv-with-toolchain:
+    RUSTUP_TOOLCHAIN="$({{just}} get-msrv)" {{just}} ci-test-msrv
 
 # Clean all build artifacts
 clean:
@@ -71,12 +74,15 @@ clippy *args:
     cargo clippy --workspace --all-features --all-targets {{args}}
     cargo clippy --no-default-features --features default_loadable_extension {{args}}
 
-# Generate code coverage report. Will install `cargo llvm-cov` if missing.
-coverage *args='--no-clean --open':  (cargo-install 'cargo-llvm-cov')
-    # do not enable --all-features here as it will cause sqlite runtime errors
-    cargo llvm-cov --workspace --all-targets --include-build-script {{args}}
-    # TODO: add test coverage for the loadable extension too, and combine them
-    # cargo llvm-cov --example {{bin_name}} --no-default-features --features default_loadable_extension --codecov --output-path codecov.info
+# Generate and open the HTML coverage report
+coverage: (_coverage '--open')
+
+# Clean, collect, and aggregate coverage using the requested report arguments
+_coverage *report_args: (cargo-install 'cargo-llvm-cov')
+    cargo llvm-cov clean --workspace
+    cargo llvm-cov --no-report --workspace --all-targets
+    cargo llvm-cov --no-report --example {{bin_name}} --no-default-features --features default_loadable_extension
+    cargo llvm-cov report --include-build-script {{report_args}}
 
 cross-build-ext *args:
     cross build --example {{bin_name}} --no-default-features --features default_loadable_extension {{args}}
@@ -101,7 +107,7 @@ docs *args='--open':
 # Print environment info
 env-info:
     @echo "Running for '{{main_crate}}' crate {{if ci_mode == '1' {'in CI mode'} else {'in dev mode'} }} on {{os()}} / {{arch()}}"
-    @echo "PWD $(pwd)"
+    @echo "PWD {{justfile_directory()}}"
     {{just}} --version
     rustc --version
     cargo --version
@@ -128,14 +134,25 @@ fmt-toml *args:  (cargo-install 'cargo-sort')
 
 # Get a package field from the metadata
 get-crate-field field package=main_crate:  (assert-cmd 'jq')
-    cargo metadata --format-version 1 | jq -e -r '.packages | map(select(.name == "{{package}}")) | first | .{{field}} // error("Field \"{{field}}\" is missing in Cargo.toml for package {{package}}")'
+    @cargo metadata --no-deps --format-version 1 | jq -e -r '.packages | map(select(.name == "{{package}}")) | first | .{{field}} // error("Field \"{{field}}\" is missing in Cargo.toml for package {{package}}")'
 
 # Get the minimum supported Rust version (MSRV) for the crate
 get-msrv package=main_crate:  (get-crate-field 'rust_version' package)
 
-# Find the minimum supported Rust version (MSRV) using cargo-msrv extension, and update Cargo.toml
+# Find the minimum supported Rust version (MSRV), update Cargo.toml, and test minimal dependencies
 msrv:  (cargo-install 'cargo-msrv')
-    cargo msrv find --write-msrv --ignore-lockfile
+    cargo msrv find --write-msrv --ignore-lockfile -- {{just}} _check-msrv-default
+
+# Compile the crate's default features using a dynamically generated minimal Cargo.lock
+_check-msrv-default:  (cargo-install 'cargo-minimal-versions') (cargo-install 'cargo-hack')
+    #!/usr/bin/env bash
+    set -euo pipefail
+    # cargo-msrv probes with rustup, but nested cargo subcommands may otherwise
+    # fall back to the default Cargo and emit flags unsupported by the candidate rustc.
+    toolchain="$(rustc --version | cut -d' ' -f2)"
+    export RUSTUP_TOOLCHAIN="$toolchain"
+    export CARGO="$(rustup which --toolchain "$toolchain" cargo)"
+    cargo minimal-versions check --direct --package {{main_crate}}
 
 # Run cargo-release
 release *args='':  (cargo-install 'release-plz')
@@ -210,11 +227,11 @@ assert-cmd command:
 [private]
 assert-git-is-clean:
     @if [ -n "$(git status --untracked-files --porcelain)" ]; then \
-      >&2 echo "ERROR: git repo is no longer clean. Make sure compilation and tests artifacts are in the .gitignore, and no repo files are modified." ;\
-      >&2 echo "######### git status ##########" ;\
-      git status ;\
-      git --no-pager diff ;\
-      exit 1 ;\
+        >&2 echo "ERROR: git repo is no longer clean. Make sure compilation and tests artifacts are in the .gitignore, and no repo files are modified." ;\
+        >&2 echo "######### git status ##########" ;\
+        git status ;\
+        git --no-pager diff ;\
+        exit 1 ;\
     fi
 
 # Check if a certain Cargo command is installed, and install it if needed

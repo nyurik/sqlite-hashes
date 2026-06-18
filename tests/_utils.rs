@@ -246,12 +246,12 @@ INSERT INTO tbl VALUES
         let sql = format!(
             "
 WITH RECURSIVE
-  seq(v) AS (
-     SELECT 1
-     UNION ALL
-     SELECT v + 1 FROM seq
-     LIMIT {iterations}
-  )
+    seq(v) AS (
+        SELECT 1
+        UNION ALL
+        SELECT v + 1 FROM seq
+        LIMIT {iterations}
+    )
 SELECT {expr} FROM seq"
         );
         self.sql(&sql)
