@@ -72,7 +72,10 @@ aggregate = []
 # Build loadable extension.
 # See https://github.com/rusqlite/rusqlite/discussions/1423
 # This feature does not work with "rusqlite/modern_sqlite"
-loadable_extension = ["rusqlite/loadable_extension", "rusqlite/trace"]
+loadable_extension = [
+    "rusqlite/loadable_extension",
+    "rusqlite/trace",
+]
 #
 # Hashing algorithms
 md5 = ["dep:md-5"]

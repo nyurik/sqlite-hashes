@@ -3,6 +3,8 @@
 .idea/
 .vscode/
 debug/
+flamegraph*.svg
+perf.data*
 target/
 temp/
 tmp/
