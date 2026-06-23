@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.10.10](https://github.com/nyurik/sqlite-hashes/compare/v0.10.9...v0.10.10) - 2026-06-23
+
+### Other
+
+- update lock to latest
+- update .gitignore
+- format justfile
+- *(deps)* bump log from 0.4.32 to 0.4.33 in the all-cargo-version-updates group ([#132](https://github.com/nyurik/sqlite-hashes/pull/132))
+- *(deps)* bump the all-actions-version-updates group with 3 updates ([#133](https://github.com/nyurik/sqlite-hashes/pull/133))
+- justfile cleanup
+- clippy settings
+
 ## [0.10.9](https://github.com/nyurik/sqlite-hashes/compare/v0.10.8...v0.10.9) - 2026-06-18
 
 ### Other
