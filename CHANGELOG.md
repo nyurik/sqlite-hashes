@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.10.11](https://github.com/nyurik/sqlite-hashes/compare/v0.10.10...v0.10.11) - 2026-07-14
+
+### Other
+
+- fix justfile cargo binstall
+- let rust fmt indent .rs files
+- disallow mem leaking in code
+- ignore CARGO_BUILD_WARNINGS in cargo-install
+- use Rust 1.97 cargo warnings
+
 ## [0.10.10](https://github.com/nyurik/sqlite-hashes/compare/v0.10.9...v0.10.10) - 2026-06-23
 
 ### Other
