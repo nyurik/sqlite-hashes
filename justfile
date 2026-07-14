@@ -246,7 +246,7 @@ cargo-install $COMMAND $INSTALL_CMD='' *args='':
             { set +x; } 2>/dev/null
         else
             set -x
-            cargo binstall ${INSTALL_CMD:-$COMMAND} {{binstall_args}} --locked {{args}}
+            cargo binstall ${INSTALL_CMD:-$COMMAND} {{binstall_args}} --locked
             { set +x; } 2>/dev/null
         fi
     fi
