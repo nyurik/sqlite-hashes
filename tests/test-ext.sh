@@ -39,7 +39,9 @@ EOF
 test_hash() {
     local hash=$1
     local expected=$2
-    test_one "SELECT hex(${hash}('12345'));"         "$expected"
+    # Two arguments, because recent sqlite3 shells register their own sha1(X), which a call
+    # with one argument would reach instead of this extension's sha1(...). All arguments are hashed in order.
+    test_one "SELECT hex(${hash}('1234', '5'));"     "$expected"
     test_one "SELECT ${hash}_hex('12345');"          "$expected"
     test_one "SELECT hex(${hash}_concat('12345'));"  "$expected"
     test_one "SELECT ${hash}_concat_hex('12345');"   "$expected"
