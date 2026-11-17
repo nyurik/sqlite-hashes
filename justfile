@@ -99,6 +99,17 @@ cross-test-ext-aarch64:
             arm64v8/ubuntu \
             -c 'apt-get update && apt-get install -y sqlite3 && tests/test-ext.sh'
 
+# Test the extension with the sqlite3 shell of an Ubuntu 26.04 container, for hosts whose sqlite3 is older than the one rusqlite is built for
+test-ext-docker: build-ext
+    docker run \
+            --rm \
+            -v "$(pwd):/workspace" \
+            -w /workspace \
+            --entrypoint sh \
+            -e EXTENSION_FILE=target/debug/examples/lib{{bin_name}} \
+            ubuntu:26.04 \
+            -c 'apt-get update && apt-get install -y sqlite3 && tests/test-ext.sh'
+
 # Build and open code documentation
 docs *args='--open':
     DOCS_RS=1 cargo doc --no-deps {{args}} --workspace --all-features
@@ -209,8 +220,8 @@ udeps:  (cargo-install 'cargo-udeps')
     cargo +nightly udeps --workspace --all-features --all-targets
 
 # Update all dependencies, including breaking changes. Requires nightly toolchain (install with `rustup install nightly`)
-update:
-    cargo +nightly -Z unstable-options update --breaking
+update:  (cargo-install 'cargo-upgrade' 'cargo-edit')
+    cargo upgrade --incompatible --compatible ignore
     cargo update
 
 # Ensure that a certain command is available

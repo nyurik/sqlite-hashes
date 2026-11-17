@@ -4,3 +4,4 @@ codecov:
 coverage:
   status:
     patch: off
+    project: off

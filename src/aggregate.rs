@@ -13,7 +13,7 @@ use rusqlite::functions::{Aggregate, Context, FunctionFlags};
 use rusqlite::{Connection, ToSql};
 
 use crate::rusqlite::types::{Type, ValueRef};
-use crate::rusqlite::Error::{InvalidFunctionParameterType, InvalidParameterCount};
+use crate::rusqlite::Error::{InvalidParameterCount, InvalidParameterType};
 use crate::rusqlite::Result;
 use crate::state::HashState;
 
@@ -24,8 +24,8 @@ macro_rules! trace {
 
 pub fn create_agg_function<A, D, T>(conn: &Connection, fn_name: &str, aggr: D) -> Result<()>
 where
-    A: RefUnwindSafe + UnwindSafe,
-    D: Aggregate<A, T> + 'static,
+    A: RefUnwindSafe + UnwindSafe + Send,
+    D: Aggregate<A, T> + Send + 'static,
     T: ToSql,
 {
     trace!("Registering aggregate function {fn_name}");
@@ -58,8 +58,8 @@ impl<D: Digest + Clone + UnwindSafe + RefUnwindSafe, R> AggType<D, R> {
     }
 }
 
-impl<T: Digest + Clone + UnwindSafe + RefUnwindSafe, R: ToSql> Aggregate<HashState<T>, Option<R>>
-    for AggType<T, R>
+impl<T: Digest + Clone + UnwindSafe + RefUnwindSafe + Send, R: ToSql>
+    Aggregate<HashState<T>, Option<R>> for AggType<T, R>
 {
     fn init(&self, _: &mut Context<'_>) -> Result<HashState<T>> {
         trace!("{}: Aggregate::init", self.fn_name);
@@ -94,8 +94,8 @@ impl<T: Digest + Clone + UnwindSafe + RefUnwindSafe, R: ToSql> Aggregate<HashSta
                     trace!("{}: arg{idx} -> ignoring step(NULL)", self.fn_name);
                     agg.add_null();
                 }
-                ValueRef::Integer(_) => Err(InvalidFunctionParameterType(idx, Type::Integer))?,
-                ValueRef::Real(_) => Err(InvalidFunctionParameterType(idx, Type::Real))?,
+                ValueRef::Integer(_) => Err(InvalidParameterType(idx, Type::Integer))?,
+                ValueRef::Real(_) => Err(InvalidParameterType(idx, Type::Real))?,
             }
         }
         Ok(())

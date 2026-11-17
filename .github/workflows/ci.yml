@@ -67,17 +67,17 @@ jobs:
         include:
           - target: aarch64-apple-darwin
             file: libsqlite_hashes.dylib
-            download: 'https://www.sqlite.org/2023/sqlite-tools-osx-x64-3440200.zip'
+            download: 'https://www.sqlite.org/2026/sqlite-tools-osx-x64-3540100.zip'
             os: macOS-latest
             sqlite3: ./sqlite3
           - target: x86_64-apple-darwin
             file: libsqlite_hashes.dylib
-            download: 'https://www.sqlite.org/2023/sqlite-tools-osx-x64-3440200.zip'
+            download: 'https://www.sqlite.org/2026/sqlite-tools-osx-x64-3540100.zip'
             os: macOS-latest
             sqlite3: ./sqlite3
           - target: x86_64-pc-windows-msvc
             file: sqlite_hashes.dll
-            download: 'https://www.sqlite.org/2023/sqlite-tools-win-x64-3440200.zip'
+            download: 'https://www.sqlite.org/2026/sqlite-tools-win-x64-3540100.zip'
             os: windows-latest
             sqlite3: ./sqlite3.exe
           - target: x86_64-unknown-linux-gnu
