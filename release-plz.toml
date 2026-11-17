@@ -1,4 +1,6 @@
 [workspace]
+# The last published release does not build against current rusqlite, so cargo-semver-checks cannot use it as the baseline.
+semver_check = false
 dependencies_update = true
 git_release_name = "v{{ version }}"
 git_tag_name = "v{{ version }}"
