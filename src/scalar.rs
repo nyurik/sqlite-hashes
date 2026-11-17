@@ -10,7 +10,7 @@ use rusqlite::ToSql;
 use crate::aggregate::create_agg_function;
 use crate::rusqlite::functions::FunctionFlags;
 use crate::rusqlite::types::{Type, ValueRef};
-use crate::rusqlite::Error::{InvalidFunctionParameterType, InvalidParameterCount};
+use crate::rusqlite::Error::{InvalidParameterCount, InvalidParameterType};
 use crate::rusqlite::{Connection, Result};
 use crate::state::HashState;
 
@@ -62,7 +62,9 @@ digest_names! {
     noncrypto_digests::Xxh3_128 => "xxh3_128" @ "xxhash",
 }
 
-pub(crate) fn create_hash_fn<T: NamedDigest + Clone + UnwindSafe + RefUnwindSafe + 'static>(
+pub(crate) fn create_hash_fn<
+    T: NamedDigest + Clone + UnwindSafe + RefUnwindSafe + Send + 'static,
+>(
     conn: &Connection,
     fn_name: &str,
 ) -> Result<()> {
@@ -122,7 +124,7 @@ pub(crate) fn create_hash_fn<T: NamedDigest + Clone + UnwindSafe + RefUnwindSafe
 pub fn create_scalar_function<F, T>(conn: &Connection, fn_name: &str, function: F) -> Result<()>
 where
     // TODO: Newer versions do not require UnwindSafe
-    F: Fn(&Context<'_>) -> Result<T> + Send + UnwindSafe + 'static,
+    F: Fn(&mut Context<'_>) -> Result<T> + Send + UnwindSafe + 'static,
     T: ToSql,
 {
     trace!("Registering function {fn_name}");
@@ -137,7 +139,7 @@ where
 }
 
 fn hash_fn<T: NamedDigest + Clone + UnwindSafe + RefUnwindSafe + 'static>(
-    ctx: &Context,
+    ctx: &mut Context,
     #[cfg(feature = "trace")] suffix: &'static str,
 ) -> Result<HashState<T>> {
     let param_count = ctx.len();
@@ -166,12 +168,12 @@ fn hash_fn<T: NamedDigest + Clone + UnwindSafe + RefUnwindSafe + 'static>(
                     "{}{suffix}: unsupported Integer arg{idx}={val:?}",
                     T::name()
                 );
-                Err(InvalidFunctionParameterType(0, Type::Integer))?;
+                Err(InvalidParameterType(0, Type::Integer))?;
             }
             #[allow(unused_variables)]
             ValueRef::Real(val) => {
                 trace!("{}{suffix}: unsupported Real arg{idx}={val:?}", T::name());
-                Err(InvalidFunctionParameterType(0, Type::Real))?;
+                Err(InvalidParameterType(0, Type::Real))?;
             }
         }
     }

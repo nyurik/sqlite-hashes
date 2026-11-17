@@ -18,6 +18,9 @@ compile_error!(
     "At least one of these features must be enabled: md5,sha1,sha224,sha256,sha384,sha512,blake3,fnv,xxhash"
 );
 
+// `trace` enables `hex`, but only the aggregate functions use it, to log blob arguments.
+#[cfg(all(feature = "trace", not(feature = "aggregate")))]
+use hex as _;
 /// Re-export of the [`rusqlite`](https://crates.io/crates/rusqlite) crate to avoid version conflicts.
 pub use rusqlite;
 
