@@ -974,7 +974,7 @@ checksum = "3244542535d5de959d90ec55d1b5ff0fd2bb7b1310223907d5f11932847f7b59"
 
 [[package]]
 name = "sqlite-hashes"
-version = "0.11.1"
+version = "0.11.2"
 dependencies = [
  "blake3",
  "criterion",
