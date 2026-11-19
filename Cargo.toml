@@ -97,8 +97,10 @@ log = { version = "0.4.28", optional = true }
 
 # There are multiple versions that could work, but sqlx requires a specific one, so don't limit it here
 # Note that cdylib requires >= 0.32.0 (controlled by the lock file)
+# The upper bound is the newest rusqlite verified to build and pass tests. A new rusqlite release may break
+# this crate, so raise the bound only after checking that release (`cargo update`, `just ci-test`).
 # The `set-min-rusqlite-version` just recipe will parse the minimum version from here, so it must be 3 part
-rusqlite = { version = ">=0.42.0", features = ["functions"] }
+rusqlite = { version = ">=0.42.0, <0.44", features = ["functions"] }
 
 # Digest and all hashing algorithms are using the same crates internally, so should be kept in sync
 digest = "0.11.3"
